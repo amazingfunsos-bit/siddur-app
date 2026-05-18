@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Siddur — Davening</title>
+  <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@300;400;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --parchment:   #f8f2e4;
+      --parchment2:  #ede4cc;
+      --ink:         #2a1f0e;
+      --ink-light:   #5a4a30;
+      --gold:        #b8902a;
+      --gold-light:  #e8c96a;
+      --deep:        #1a1208;
+      --panel-bg:    #fdf8ed;
+      --shadow:      rgba(42,31,14,0.18);
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Crimson Pro', Georgia, serif;
+      background: var(--deep);
+      color: var(--ink);
+      overflow: hidden;
+    }
+
+    /* ── header ── */
+    #header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 56px;
+      background: linear-gradient(135deg, var(--deep) 0%, #2e1f07 100%);
+      border-bottom: 2px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 100;
+      gap: 16px;
+    }
+
+    #header h1 {
+      font-family: 'Frank Ruhl Libre', serif;
+      font-weight: 700;
+      font-size: 1.35rem;
+      color: var(--gold-light);
+      letter-spacing: .04em;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    #header h1 span {
+      font-size: .8rem;
+      font-weight: 300;
+      color: #c8b07a;
+      margin-left: 8px;
+      font-family: 'Crimson Pro', serif;
+      font-style: italic;
+    }
+
+    /* ── nav buttons ── */
+    .nav-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      background: transparent;
+      border: 1px solid var(--gold);
+      color: var(--gold-light);
+      font-family: 'Crimson Pro', serif;
+      font-size: .85rem;
+      padding: 4px 12px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: background .2s, color .2s;
+      white-space: nowrap;
+    }
+    .nav-btn:hover { background: var(--gold); color: var(--deep); }
+
+    #pageInput {
+      width: 56px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid var(--gold);
+      color: var(--gold-light);
+      font-family: 'Crimson Pro', serif;
+      font-size: .9rem;
+      text-align: center;
+      padding: 4px 6px;
+      border-radius: 3px;
+    }
+    #pageInput:focus { outline: none; background: rgba(255,255,255,.13); }
+    #pageLabel { color: #c8b07a; font-size: .85rem; white-space: nowrap; }
+
+    /* ── layout ── */
+    #main {
+      position: fixed;
+      top: 56px; bottom: 0; left: 0; right: 0;
+      display: flex;
+    }
+
+    /* ── PDF panel ── */
+    #pdf-panel {
+      flex: 1;
+      background: #1c1408;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-y: auto;
+      padding: 20px 16px 30px;
+      gap: 12px;
+      scroll-behavior: smooth;
+    }
+    #pdf-panel::-webkit-scrollbar { width: 8px; }
+    #pdf-panel::-webkit-scrollbar-track { background: #12100a; }
+    #pdf-panel::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 4px; }
+
+    .page-wrapper {
+      position: relative;
+      background: var(--parchment);
+      border-radius: 2px;
+      box-shadow: 0 4px 24px var(--shadow), 0 1px 4px rgba(0,0,0,.4);
+      overflow: hidden;
+      border: 1px solid var(--parchment2);
+    }
+    .page-wrapper canvas {
+      display: block;
+    }
+    .page-number-badge {
+      position: absolute;
+      bottom: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Crimson Pro', serif;
+      font-size: .7rem;
+      color: var(--ink-light);
+      opacity: .6;
+      pointer-events: none;
+    }
+
+    /* ── audio panel ── */
+    #audio-panel {
+      width: 320px;
+      min-width: 260px;
+      background: var(--panel-bg);
+      border-left: 2px solid var(--parchment2);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #audio-panel-header {
+      background: linear-gradient(135deg, #2e1f07, var(--deep));
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--gold);
+    }
+    #audio-panel-header h2 {
+      font-family: 'Frank Ruhl Libre', serif;
+      color: var(--gold-light);
+      font-size: 1rem;
+      font-weight: 400;
+      margin-bottom: 4px;
+    }
+    #audio-panel-header p {
+      font-size: .78rem;
+      color: #c0a87a;
+      font-style: italic;
+    }
+
+    #drive-frame-wrap {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+    #drive-frame-wrap iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* ── loading overlay ── */
+    #loading {
+      position: fixed;
+      inset: 0;
+      background: var(--deep);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      gap: 16px;
+      transition: opacity .5s;
+    }
+    #loading.hidden { opacity: 0; pointer-events: none; }
+    #loading-title {
+      font-family: 'Frank Ruhl Libre', serif;
+      color: var(--gold-light);
+      font-size: 2rem;
+      letter-spacing: .08em;
+    }
+    #loading-sub {
+      color: #c0a87a;
+      font-style: italic;
+      font-size: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid rgba(184,144,42,.2);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin .9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── zoom controls ── */
+    #zoom-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .zoom-btn {
+      background: transparent;
+      border: 1px solid rgba(184,144,42,.5);
+      color: var(--gold-light);
+      font-size: 1.1rem;
+      width: 26px; height: 26px;
+      border-radius: 3px;
+      cursor: pointer;
+      line-height: 1;
+      transition: background .15s;
+    }
+    .zoom-btn:hover { background: rgba(184,144,42,.2); }
+    #zoom-label { color: #c8b07a; font-size: .8rem; min-width: 38px; text-align: center; }
+
+    /* ── responsive ── */
+    @media (max-width: 700px) {
+      #main { flex-direction: column; }
+      #audio-panel { width: 100%; min-width: unset; height: 280px; border-left: none; border-top: 2px solid var(--parchment2); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading screen -->
+<div id="loading">
+  <div id="loading-title">סידור</div>
+  <div id="loading-sub">Loading Siddur…</div>
+  <div class="spinner"></div>
+</div>
+
+<!-- Header -->
+<div id="header">
+  <h1>סידור <span>Siddur · Davening</span></h1>
+
+  <div class="nav-row">
+    <button class="nav-btn" id="btnPrev">◀ Prev</button>
+    <input id="pageInput" type="number" min="1" value="1" title="Go to page" />
+    <span id="pageLabel">/ …</span>
+    <button class="nav-btn" id="btnNext">Next ▶</button>
+  </div>
+
+  <div id="zoom-row" class="nav-row">
+    <button class="zoom-btn" id="btnZoomOut">−</button>
+    <span id="zoom-label">100%</span>
+    <button class="zoom-btn" id="btnZoomIn">+</button>
+  </div>
+</div>
+
+<!-- Main layout -->
+<div id="main">
+
+  <!-- PDF viewer -->
+  <div id="pdf-panel" id="pdfPanel"></div>
+
+  <!-- Audio panel -->
+  <div id="audio-panel">
+    <div id="audio-panel-header">
+      <h2>🎵 Davening Audio</h2>
+      <p>Browse &amp; play from the folder below</p>
+    </div>
+    <div id="drive-frame-wrap">
+      <iframe
+        src="https://drive.google.com/embeddedfolderview?id=1dDGdxkD2ro58OfGWOF8cwy85XTuJuUsM#list"
+        title="Davening Audio Folder"
+        allow="autoplay"
+      ></iframe>
+    </div>
+  </div>
+
+</div>
+
+<!-- pdf.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+(async () => {
+  const pdfjsLib = window['pdfjs-dist/build/pdf'];
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  const PDF_URL = 'Siddur.pdf';
+
+  let pdfDoc = null;
+  let scale   = 1.0;
+  let currentPage = 1;
+
+  const panel      = document.getElementById('pdf-panel');
+  const pageInput  = document.getElementById('pageInput');
+  const pageLabel  = document.getElementById('pageLabel');
+  const loadingEl  = document.getElementById('loading');
+  const zoomLabel  = document.getElementById('zoom-label');
+
+  // ── render a single page into a canvas wrapper ──
+  async function renderPage(num) {
+    const page = await pdfDoc.getPage(num);
+    const viewport = page.getViewport({ scale });
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'page-wrapper';
+    wrapper.dataset.page = num;
+
+    const canvas = document.createElement('canvas');
+    canvas.width  = viewport.width;
+    canvas.height = viewport.height;
+    wrapper.appendChild(canvas);
+
+    const badge = document.createElement('div');
+    badge.className = 'page-number-badge';
+    badge.textContent = num;
+    wrapper.appendChild(badge);
+
+    panel.appendChild(wrapper);
+
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+    return wrapper;
+  }
+
+  // ── render a range of pages ──
+  async function renderPages(start, end) {
+    for (let n = start; n <= end; n++) {
+      await renderPage(n);
+    }
+  }
+
+  // ── scroll to page ──
+  function scrollToPage(num) {
+    const el = panel.querySelector(`[data-page="${num}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ── rebuild entire panel at new scale ──
+  async function rebuild() {
+    panel.innerHTML = '';
+    await renderPages(1, Math.min(pdfDoc.numPages, 10)); // initial batch
+    zoomLabel.textContent = Math.round(scale * 100) + '%';
+    // lazy-load remaining pages on scroll
+    lazyLoad();
+  }
+
+  // ── lazy load remaining pages as user scrolls ──
+  let rendered = new Set();
+  function lazyLoad() {
+    const alreadyCount = panel.querySelectorAll('.page-wrapper').length;
+    rendered = new Set(
+      [...panel.querySelectorAll('[data-page]')].map(e => +e.dataset.page)
+    );
+    const observer = new IntersectionObserver(async (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          const num = +entry.target.dataset.page;
+          // pre-render next 3 pages ahead
+          for (let n = num + 1; n <= Math.min(pdfDoc.numPages, num + 3); n++) {
+            if (!rendered.has(n)) {
+              rendered.add(n);
+              await renderPage(n);
+            }
+          }
+          // update current page display
+          currentPage = num;
+          pageInput.value = num;
+        }
+      }
+    }, { root: panel, rootMargin: '200px' });
+
+    panel.querySelectorAll('.page-wrapper').forEach(el => observer.observe(el));
+  }
+
+  // ── load PDF ──
+  try {
+    pdfDoc = await pdfjsLib.getDocument(PDF_URL).promise;
+    pageLabel.textContent = '/ ' + pdfDoc.numPages;
+    pageInput.max = pdfDoc.numPages;
+    await rebuild();
+    // hide loader
+    loadingEl.classList.add('hidden');
+  } catch(e) {
+    document.getElementById('loading-sub').textContent = 'Error loading PDF. Make sure Siddur.pdf is in the same folder.';
+    console.error(e);
+    return;
+  }
+
+  // ── navigation ──
+  document.getElementById('btnPrev').addEventListener('click', () => {
+    currentPage = Math.max(1, currentPage - 1);
+    pageInput.value = currentPage;
+    scrollToPage(currentPage);
+  });
+  document.getElementById('btnNext').addEventListener('click', () => {
+    currentPage = Math.min(pdfDoc.numPages, currentPage + 1);
+    pageInput.value = currentPage;
+    scrollToPage(currentPage);
+  });
+  pageInput.addEventListener('change', () => {
+    const n = Math.min(pdfDoc.numPages, Math.max(1, +pageInput.value || 1));
+    pageInput.value = n;
+    currentPage = n;
+    scrollToPage(n);
+  });
+
+  // ── zoom ──
+  document.getElementById('btnZoomIn').addEventListener('click', async () => {
+    if (scale >= 2.5) return;
+    scale = Math.round((scale + 0.25) * 100) / 100;
+    await rebuild();
+    scrollToPage(currentPage);
+  });
+  document.getElementById('btnZoomOut').addEventListener('click', async () => {
+    if (scale <= 0.5) return;
+    scale = Math.round((scale - 0.25) * 100) / 100;
+    await rebuild();
+    scrollToPage(currentPage);
+  });
+
+  // ── keyboard shortcuts ──
+  document.addEventListener('keydown', (e) => {
+    if (e.target === pageInput) return;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+      currentPage = Math.max(1, currentPage - 1);
+      pageInput.value = currentPage;
+      scrollToPage(currentPage);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+      currentPage = Math.min(pdfDoc.numPages, currentPage + 1);
+      pageInput.value = currentPage;
+      scrollToPage(currentPage);
+    }
+  });
+})();
+</script>
+</body>
+</html>
