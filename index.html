@@ -1,1 +1,334 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>סידור — Siddur</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Hebrew:wght@300;400;700&family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
+:root{
+  --bg:#0e0c09;
+  --surface:#151209;
+  --panel:#fdf8f0;
+  --panel2:#f5edd8;
+  --gold:#c8981e;
+  --gold2:#e8c96a;
+  --gold3:#f5dfa0;
+  --ink:#1a1208;
+  --ink2:#4a3a20;
+  --muted:#9a7a40;
+  --cream:#fffdf5;
+  --border:rgba(200,152,30,0.25);
+  --serif:'Noto Serif Hebrew',Georgia,serif;
+  --cap:'Cinzel',serif;
+  --body:'Crimson Pro',Georgia,serif;
+  --header-h:60px;
+  --audio-h:72px;
+}
+
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:var(--serif)}
+
+/* ── HEADER ── */
+#hd{
+  position:fixed;top:0;left:0;right:0;height:var(--header-h);
+  background:var(--bg);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 18px;z-index:200;gap:12px;
+}
+#hd::after{
+  content:'';position:absolute;bottom:-2px;left:10%;right:10%;
+  height:1px;background:linear-gradient(to right,transparent,var(--gold),transparent);
+}
+
+.brand{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.brand-he{
+  font-family:var(--serif);font-size:1.55rem;font-weight:700;
+  color:var(--gold2);letter-spacing:.05em;
+}
+.brand-div{width:1px;height:20px;background:var(--border);flex-shrink:0}
+.brand-en{
+  font-family:var(--cap);font-size:.62rem;font-weight:400;
+  color:var(--muted);letter-spacing:.22em;text-transform:uppercase;
+}
+
+.nav{display:flex;align-items:center;gap:5px}
+.nb{
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--gold2);
+  font-family:var(--cap);font-size:.64rem;letter-spacing:.12em;
+  padding:5px 11px;border-radius:2px;cursor:pointer;
+  transition:all .18s;text-transform:uppercase;white-space:nowrap;
+}
+.nb:hover{background:rgba(200,152,30,.12);border-color:var(--gold);}
+.nb:active{transform:scale(.97)}
+
+#pgWrap{display:flex;align-items:center;gap:5px}
+#pgLabel{color:var(--muted);font-family:var(--cap);font-size:.64rem;letter-spacing:.06em;white-space:nowrap}
+
+.zb{
+  background:transparent;border:1px solid var(--border);
+  color:var(--gold2);width:26px;height:26px;border-radius:2px;
+  cursor:pointer;font-size:1rem;line-height:1;transition:all .15s;
+  flex-shrink:0;
+}
+.zb:hover{background:rgba(200,152,30,.14);}
+#zPct{color:var(--muted);font-family:var(--cap);font-size:.64rem;min-width:36px;text-align:center;letter-spacing:.06em}
+
+/* ── LAYOUT ── */
+#main{
+  position:fixed;
+  top:var(--header-h);bottom:0;left:0;right:0;
+  display:flex;
+}
+
+/* ── PDF IFRAME PANEL ── */
+#pdf-wrap{
+  flex:1;
+  background:#0e0c09;
+  display:flex;flex-direction:column;
+  overflow:hidden;position:relative;
+}
+
+#pdf-frame{
+  flex:1;
+  width:100%;border:none;
+  background:var(--cream);
+  /* Google Drive preview handles its own scrolling */
+}
+
+/* zoom overlay controls */
+#zoom-bar{
+  position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:8px;
+  background:rgba(14,12,9,.85);
+  border:1px solid var(--border);
+  border-radius:30px;
+  padding:6px 14px;
+  backdrop-filter:blur(8px);
+  z-index:10;
+}
+#zoom-bar .zb{border-radius:50%;width:28px;height:28px}
+#zoom-bar #zPct{min-width:40px}
+
+/* ── AUDIO PANEL ── */
+#ap{
+  width:310px;min-width:250px;
+  background:var(--surface);
+  border-left:1px solid var(--border);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  position:relative;
+}
+
+#ap::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(to right,transparent,var(--gold2),transparent);
+}
+
+#ap-head{
+  padding:15px 18px 13px;
+  border-bottom:1px solid var(--border);
+}
+
+.ap-title{
+  font-family:var(--cap);font-size:.82rem;letter-spacing:.22em;
+  color:var(--gold2);text-transform:uppercase;margin-bottom:2px;
+}
+.ap-ornament{
+  display:flex;align-items:center;gap:6px;margin:7px 0 5px;
+}
+.ap-ornament::before,.ap-ornament::after{
+  content:'';flex:1;height:1px;
+  background:linear-gradient(to right,transparent,rgba(200,152,30,.3),transparent);
+}
+.ap-ornament span{color:var(--gold);font-size:.55rem;opacity:.8}
+.ap-sub{
+  font-family:var(--body);font-style:italic;font-size:.8rem;
+  color:var(--muted);
+}
+
+#df-wrap{flex:1;overflow:hidden;position:relative}
+#df-wrap iframe{
+  width:100%;height:100%;border:none;
+  /* invert dark-mode to light for the Drive folder */
+  filter:invert(1) hue-rotate(180deg) brightness(.92) contrast(.95);
+}
+
+/* ── LOADING ── */
+#loading{
+  position:fixed;inset:0;background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:9999;gap:16px;transition:opacity .5s;
+}
+#loading.gone{opacity:0;pointer-events:none}
+.ld-he{
+  font-family:var(--serif);font-size:2.6rem;font-weight:700;
+  color:var(--gold2);letter-spacing:.1em;
+  text-shadow:0 0 40px rgba(232,201,106,.35);
+}
+.ld-en{
+  font-family:var(--cap);font-size:.72rem;letter-spacing:.28em;
+  color:var(--muted);text-transform:uppercase;
+}
+.spin{
+  width:34px;height:34px;
+  border:2px solid rgba(200,152,30,.18);
+  border-top-color:var(--gold2);
+  border-radius:50%;animation:spin .85s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.gems{display:flex;gap:5px;align-items:center}
+.gems i{
+  width:6px;height:6px;background:var(--gold);
+  transform:rotate(45deg);opacity:.5;display:inline-block;
+}
+.gems i:nth-child(2){opacity:1;width:8px;height:8px}
+
+/* ── MOBILE ── */
+#panel-toggle{
+  display:none;
+  background:transparent;border:1px solid var(--border);
+  color:var(--gold2);font-family:var(--cap);font-size:.6rem;
+  letter-spacing:.1em;padding:5px 10px;border-radius:2px;
+  cursor:pointer;text-transform:uppercase;
+}
+#ap.hidden{display:none}
+
+@media(max-width:700px){
+  #main{flex-direction:column}
+  #ap{
+    width:100%;min-width:unset;
+    height:260px;
+    border-left:none;border-top:1px solid var(--border);
+  }
+  #panel-toggle{display:block}
+  #zoom-bar{bottom:12px}
+  :root{--header-h:54px}
+}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="gems"><i></i><i></i><i></i></div>
+  <div class="ld-he">סִדּוּר</div>
+  <div class="ld-en">Siddur · Davening</div>
+  <div class="spin"></div>
+  <div class="gems"><i></i><i></i><i></i></div>
+</div>
+
+<!-- HEADER -->
+<div id="hd">
+  <div class="brand">
+    <span class="brand-he">סִדּוּר</span>
+    <div class="brand-div"></div>
+    <span class="brand-en">Davening</span>
+  </div>
+
+  <div class="nav">
+    <button class="nb" id="btnPrev">← Prev</button>
+    <div id="pgWrap">
+      <span id="pgLabel">Page&nbsp;<strong id="pgNum" style="color:var(--gold2)">—</strong></span>
+    </div>
+    <button class="nb" id="btnNext">Next →</button>
+  </div>
+
+  <div class="nav">
+    <button class="zb" id="btnZOut">−</button>
+    <span id="zPct">100%</span>
+    <button class="zb" id="btnZIn">+</button>
+  </div>
+
+  <button id="panel-toggle" onclick="document.getElementById('ap').classList.toggle('hidden')">
+    🎵 Audio
+  </button>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- PDF via Google Drive preview — no CORS issues -->
+  <div id="pdf-wrap">
+    <iframe
+      id="pdf-frame"
+      src="https://drive.google.com/file/d/1DqojNYx9hiZ6fDA-zOGvw4vVf4jcXQcd/preview"
+      allow="autoplay"
+      allowfullscreen
+    ></iframe>
+
+    <!-- floating zoom hint (Drive handles its own zoom, these are decorative nav) -->
+    <div id="zoom-bar">
+      <button class="zb" id="btnZOut2">−</button>
+      <span id="zPct2" style="color:var(--gold2);font-family:var(--cap);font-size:.65rem;letter-spacing:.08em;min-width:38px;text-align:center">Zoom</span>
+      <button class="zb" id="btnZIn2">+</button>
+    </div>
+  </div>
+
+  <!-- AUDIO PANEL -->
+  <div id="ap">
+    <div id="ap-head">
+      <div class="ap-title">🎵 Davening Audio</div>
+      <div class="ap-ornament"><span>✦</span></div>
+      <div class="ap-sub">Browse &amp; play recordings</div>
+    </div>
+    <div id="df-wrap">
+      <iframe
+        src="https://drive.google.com/embeddedfolderview?id=1dDGdxkD2ro58OfGWOF8cwy85XTuJuUsM#list"
+        title="Davening Audio Folder"
+        allow="autoplay"
+      ></iframe>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Hide loader once Drive iframe fires load
+const frame = document.getElementById('pdf-frame');
+const loader = document.getElementById('loading');
+
+frame.addEventListener('load', () => {
+  setTimeout(() => loader.classList.add('gone'), 400);
+});
+// Fallback — hide after 4s regardless
+setTimeout(() => loader.classList.add('gone'), 4000);
+
+// Page navigation — Drive preview supports #page=N in the URL
+let currentPage = 1;
+const FILE_ID = '1DqojNYx9hiZ6fDA-zOGvw4vVf4jcXQcd';
+
+function goTo(n) {
+  if (n < 1) n = 1;
+  currentPage = n;
+  document.getElementById('pgNum').textContent = n;
+  frame.src = `https://drive.google.com/file/d/${FILE_ID}/preview#page=${n}`;
+}
+
+document.getElementById('btnPrev').addEventListener('click', () => goTo(currentPage - 1));
+document.getElementById('btnNext').addEventListener('click', () => goTo(currentPage + 1));
+
+// Zoom label (informational — Drive controls its own zoom)
+let zoom = 100;
+function updateZoom(delta) {
+  zoom = Math.min(200, Math.max(50, zoom + delta));
+  const pct = zoom + '%';
+  document.getElementById('zPct').textContent = pct;
+}
+document.getElementById('btnZOut').addEventListener('click', () => updateZoom(-25));
+document.getElementById('btnZIn').addEventListener('click', () => updateZoom(25));
+document.getElementById('btnZOut2').addEventListener('click', () => updateZoom(-25));
+document.getElementById('btnZIn2').addEventListener('click', () => updateZoom(25));
+
+// Keyboard nav
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowUp') goTo(currentPage - 1);
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') goTo(currentPage + 1);
+});
+</script>
+</body>
+</html>
