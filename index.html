@@ -45,217 +45,203 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font
 
 /* MAIN */
 #main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+/* TOPBAR */
 #topbar{background:var(--white);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:12px}
 .tb-title{font-family:var(--he);font-size:1.25rem;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tb-sub{font-family:var(--ui);font-size:.66rem;color:var(--muted);margin-top:1px}
+.tb-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
 
-/* CONTENT */
-#content{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 28px;text-align:center;direction:rtl;gap:14px;overflow-y:auto}
-.pd-num{font-family:var(--ui);font-size:.72rem;font-weight:600;color:var(--gold);letter-spacing:.14em;text-transform:uppercase;min-height:1.2em}
-.pd-he{font-family:var(--he);font-size:3rem;font-weight:900;color:var(--ink);line-height:1.15}
-.pd-en{font-family:var(--ui);font-size:.9rem;color:var(--muted)}
-.status-pill{display:inline-flex;align-items:center;gap:7px;padding:6px 16px;border-radius:20px;font-family:var(--ui);font-size:.72rem;font-weight:600;transition:all .2s}
-.s-loading{background:rgba(200,152,30,.1);color:#a07010;border:1px solid rgba(200,152,30,.25)}
-.s-ready{background:rgba(30,160,60,.08);color:#1a7a40;border:1px solid rgba(30,160,60,.2)}
-.s-playing{background:rgba(200,152,30,.18);color:#8a5e08;border:1px solid rgba(200,152,30,.35)}
-.s-error{background:rgba(200,40,40,.08);color:#a02020;border:1px solid rgba(200,40,40,.2)}
-.pill-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
-.pill-dot.pulse{animation:pulse .9s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}
-.pill-spin{width:12px;height:12px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* speed note */
-.spd-note{font-family:var(--ui);font-size:.68rem;color:var(--muted);background:rgba(200,152,30,.06);border:1px solid rgba(200,152,30,.15);border-radius:6px;padding:8px 14px;max-width:380px;line-height:1.6;text-align:center}
-
-/* PLAYER */
-#player{background:var(--sidebar);border-top:1px solid rgba(200,152,30,.15);padding:8px 16px 10px;flex-shrink:0;display:flex;flex-direction:column;gap:7px}
-#prog-wrap{height:5px;background:rgba(255,255,255,.1);border-radius:3px;cursor:pointer;position:relative}
-#prog-fill{height:100%;border-radius:3px;background:linear-gradient(to left,var(--gold),var(--gold2));width:0%;pointer-events:none;transition:width .25s linear}
-#prog-thumb{position:absolute;top:50%;right:0%;width:13px;height:13px;border-radius:50%;background:var(--gold2);border:2px solid #fff;transform:translate(50%,-50%);pointer-events:none;transition:right .25s linear}
-#ctrls{display:flex;align-items:center;gap:6px}
-.cb{background:transparent;border:none;color:rgba(255,255,255,.6);cursor:pointer;font-size:1rem;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0}
-.cb:hover{color:#fff;background:rgba(255,255,255,.1)}
-.cb:active{transform:scale(.9)}
-.cb:disabled{opacity:.3;cursor:default}
-#play-btn{width:40px;height:40px;background:var(--gold);border-radius:50%;color:#fff;font-size:1rem;flex-shrink:0}
-#play-btn:hover:not(:disabled){background:var(--gold2);color:#1a1208}
-.td{font-family:var(--ui);font-size:.65rem;color:rgba(255,255,255,.35);white-space:nowrap;flex-shrink:0}
-.csp{flex:1}
-#tnm{font-family:var(--he);font-size:.85rem;color:rgba(255,255,255,.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;flex-shrink:0}
-#spd-grp{display:flex;align-items:center;gap:2px;background:rgba(255,255,255,.07);border:1px solid rgba(200,152,30,.22);border-radius:18px;padding:2px;flex-shrink:0}
-.sp-btn{background:transparent;border:none;color:rgba(255,255,255,.45);font-family:var(--ui);font-size:.6rem;font-weight:700;padding:3px 7px;border-radius:14px;cursor:pointer;transition:all .12s;white-space:nowrap}
-.sp-btn:hover{color:#fff}
+/* speed group in topbar */
+#spd-grp{display:flex;align-items:center;gap:2px;background:rgba(200,152,30,.08);border:1px solid rgba(200,152,30,.22);border-radius:18px;padding:2px}
+.sp-btn{background:transparent;border:none;color:var(--muted);font-family:var(--ui);font-size:.62rem;font-weight:700;padding:3px 8px;border-radius:14px;cursor:pointer;transition:all .12s;white-space:nowrap}
+.sp-btn:hover{color:var(--ink)}
 .sp-btn.on{background:var(--gold);color:#fff}
 
-/* hidden iframe */
-#sc-frame{position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none}
+/* CONTENT — split: prayer title top, SC player bottom */
+#content{flex:1;display:flex;flex-direction:column;overflow:hidden}
 
-@media(max-width:580px){#sb{display:none}.td{display:none}#tnm{max-width:80px}.pd-he{font-size:2.2rem}}
+#prayer-hero{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:20px 28px;text-align:center;direction:rtl;gap:10px;
+}
+.pd-num{font-family:var(--ui);font-size:.7rem;font-weight:600;color:var(--gold);letter-spacing:.14em;text-transform:uppercase;min-height:1em}
+.pd-he{font-family:var(--he);font-size:2.8rem;font-weight:900;color:var(--ink);line-height:1.2}
+.pd-en{font-family:var(--ui);font-size:.88rem;color:var(--muted)}
+
+/* SC PLAYER AREA */
+#sc-wrap{
+  flex-shrink:0;
+  background:var(--white);
+  border-top:1px solid var(--border);
+  display:flex;flex-direction:column;
+}
+
+/* nav row above iframe */
+#sc-nav{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 16px;
+  border-bottom:1px solid var(--border);
+  background:var(--bg);
+}
+.nc{background:transparent;border:1px solid var(--border);color:var(--ink2,#4a3a20);font-family:var(--ui);font-size:.7rem;padding:5px 12px;border-radius:4px;cursor:pointer;transition:background .12s;white-space:nowrap}
+.nc:hover{background:var(--border)}
+.nc:disabled{opacity:.3;cursor:default}
+#sc-track-name{font-family:var(--he);font-size:.95rem;font-weight:700;color:var(--ink);flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sc-status{font-family:var(--ui);font-size:.65rem;color:var(--muted);white-space:nowrap}
+
+/* iframe */
+#sc-frame{
+  width:100%;
+  height:166px;
+  border:none;
+  display:block;
+  background:#f5f5f5;
+}
+
+/* welcome state */
+#welcome{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;padding:20px;text-align:center;
+}
+.wlc-he{font-family:var(--he);font-size:2.4rem;font-weight:900;color:var(--ink)}
+.wlc-en{font-family:var(--ui);font-size:.85rem;color:var(--muted)}
+.wlc-hint{font-family:var(--ui);font-size:.75rem;color:var(--gold);background:rgba(200,152,30,.08);border:1px solid rgba(200,152,30,.2);border-radius:6px;padding:8px 16px}
+
+@media(max-width:580px){
+  #sb{display:none}
+  .pd-he{font-size:2rem}
+  #sc-frame{height:150px}
+}
 </style>
 </head>
 <body>
 <div id="app">
-  <div id="sb">
-    <div class="sb-logo">
-      <div class="sb-logo-he">סידור</div>
-      <div class="sb-logo-en">Tefilah Player</div>
-    </div>
-    <div class="sb-hd">Shacharit · שַׁחֲרִית</div>
-    <div id="menu"></div>
+
+<!-- SIDEBAR -->
+<div id="sb">
+  <div class="sb-logo">
+    <div class="sb-logo-he">סידור</div>
+    <div class="sb-logo-en">Tefilah Player</div>
   </div>
-
-  <div id="main">
-    <div id="topbar">
-      <div style="min-width:0">
-        <div class="tb-title" id="ttl">סידור</div>
-        <div class="tb-sub" id="tsub">Select a prayer from the list</div>
-      </div>
-    </div>
-
-    <div id="content">
-      <div class="pd-num" id="pd-num">&nbsp;</div>
-      <div class="pd-he" id="pd-he">בחר תפילה</div>
-      <div class="pd-en" id="pd-en">Choose a prayer to begin</div>
-      <div class="status-pill s-loading" id="status-pill">
-        <div class="pill-spin"></div>
-        <span id="status-txt">Connecting to SoundCloud…</span>
-      </div>
-      <div class="spd-note">
-        ⚡ Speed control (1× – 4×) is active — use the buttons in the player bar below
-      </div>
-    </div>
-
-    <div id="player">
-      <div id="prog-wrap">
-        <div id="prog-fill"></div>
-        <div id="prog-thumb"></div>
-      </div>
-      <div id="ctrls">
-        <button class="cb" id="b-prev" disabled>⏮</button>
-        <button class="cb" id="b-rew" disabled>⏪</button>
-        <button class="cb" id="play-btn" disabled>▶</button>
-        <button class="cb" id="b-fwd" disabled>⏩</button>
-        <button class="cb" id="b-next" disabled>⏭</button>
-        <span class="td" id="td">0:00 / 0:00</span>
-        <div class="csp"></div>
-        <span id="tnm">—</span>
-        <div id="spd-grp">
-          <button class="sp-btn" data-s="1">1×</button>
-          <button class="sp-btn on" data-s="1.25">1.25×</button>
-          <button class="sp-btn" data-s="1.5">1.5×</button>
-          <button class="sp-btn" data-s="2">2×</button>
-          <button class="sp-btn" data-s="3">3×</button>
-          <button class="sp-btn" data-s="4">4×</button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <div class="sb-hd">Shacharit · שַׁחֲרִית</div>
+  <div id="menu"></div>
 </div>
 
-<!-- SC iframe must exist in DOM before the API script loads -->
-<iframe id="sc-frame"
-  src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/2240192102&auto_play=false&buying=false&liking=false&download=false&sharing=false&show_artwork=false&show_comments=false&show_playcount=false&show_user=false&hide_related=true&visual=false"
-  allow="autoplay"
-></iframe>
+<!-- MAIN -->
+<div id="main">
 
-<!-- SC Widget API loaded SYNCHRONOUSLY before our script -->
-<script src="https://w.soundcloud.com/player/api.js"></script>
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <div style="min-width:0">
+      <div class="tb-title" id="ttl">סידור</div>
+      <div class="tb-sub" id="tsub">בחר תפילה · Select a prayer</div>
+    </div>
+    <div class="tb-right">
+      <div id="spd-grp">
+        <button class="sp-btn" data-s="0.5">0.5×</button>
+        <button class="sp-btn" data-s="0.75">0.75×</button>
+        <button class="sp-btn on" data-s="1">1×</button>
+        <button class="sp-btn" data-s="1.25">1.25×</button>
+        <button class="sp-btn" data-s="1.5">1.5×</button>
+        <button class="sp-btn" data-s="2">2×</button>
+        <button class="sp-btn" data-s="3">3×</button>
+        <button class="sp-btn" data-s="4">4×</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="content">
+
+    <!-- Welcome / prayer hero -->
+    <div id="prayer-hero">
+      <div class="pd-num" id="pd-num">&nbsp;</div>
+      <div class="pd-he" id="pd-he">בחר תפילה</div>
+      <div class="pd-en" id="pd-en">Select a prayer from the sidebar to begin</div>
+    </div>
+
+    <!-- SoundCloud player area -->
+    <div id="sc-wrap">
+      <div id="sc-nav">
+        <button class="nc" id="b-prev" disabled>⏮ Prev</button>
+        <span id="sc-track-name">—</span>
+        <span id="sc-status"></span>
+        <button class="nc" id="b-next" disabled>Next ⏭</button>
+      </div>
+      <!-- The iframe src is swapped on each prayer selection -->
+      <iframe id="sc-frame"
+        src="about:blank"
+        allow="autoplay"
+        scrolling="no"
+      ></iframe>
+    </div>
+
+  </div>
+</div>
+</div>
+
 <script>
+// ── Each prayer mapped directly to its SoundCloud track slug ──
+// Slugs taken from the actual playlist page
 const PRAYERS = [
-  { num:'3',   he:'אֱלֹקֵינוּ וֵאלֹקֵי אֲבוֹתֵינוּ', en:'Elokeinu Veilokei Avoseinu', slug:'10992761' },
-  { num:'4',   he:'וַיְהִי אַחַר',                    en:'Vayehi Achar',               slug:'10992763' },
-  { num:'26',  he:'הוֹשִׁיעֵנוּ',                     en:'Hoshieinu',                  slug:'11002418' },
-  { num:'33',  he:'הַלְלוּקָהּ הַלְלִי',              en:'Halelukah Haleli',           slug:'11002436' },
-  { num:'37',  he:'הַלְלוּקָהּ הַלְלוּ אֵל',          en:'Halelukah Halelu Keil',      slug:'11002444' },
-  { num:'38',  he:'בָּרוּךְ ה׳ לְעוֹלָם',             en:'Baruch Hashem LeOlam',       slug:'11002448' },
-  { num:'41',  he:'וַיּוֹשַׁע',                       en:'VaYosha',                    slug:'11002454' },
-  { num:'42',  he:'אָז יָשִׁיר',                      en:'Az Yashir',                  slug:'11002456' },
-  { num:'43',  he:'יִשְׁתַּבַּח',                     en:'Yishtabach',                 slug:'11002458' },
-  { num:'44',  he:'בָּרוּךְ יוֹצֵר',                  en:'Baruch Yotzeir',             slug:'11002461' },
-  { num:'45',  he:'הַמֵּאִיר לָאָרֶץ',                en:'Hameiir LaAretz',            slug:'11002463' },
-  { num:'46',  he:'תִּתְבָּרֵךְ',                     en:'Tisbareich',                 slug:'11002465' },
-  { num:'47',  he:'אֶת שֵׁם הָאֵ-ל',                 en:'Es Shem HaKel',              slug:'11002467' },
-  { num:'48',  he:'קָדוֹשׁ',                          en:'Kadosh',                     slug:'11002469' },
-  { num:'49',  he:'לָאֵ-ל בָּרוּךְ',                  en:'LaKeil Baruch',              slug:'11002471' },
-  { num:'50',  he:'אַהֲבַת עוֹלָם',                   en:'Ahavas Olam',                slug:'11002473' },
-  { num:'51',  he:'שְׁמַע יִשְׂרָאֵל',               en:'Shema Yisrael',              slug:'11002476' },
-  { num:'52',  he:'וְהָיָה',                          en:'VeHayah',                    slug:'11002478' },
-  { num:'53',  he:'וַיֹּאמֶר',                        en:'VaYomer',                    slug:'11002480' },
-  { num:'54',  he:'וְיַצִּיב',                        en:'Vyatziv',                    slug:'11002483' },
-  { num:'55',  he:'אֶל הָרִאשׁוֹנִים',               en:'Al HaRishonim',              slug:'11002485' },
-  { num:'56',  he:'עֶזְרַת אֲבוֹתֵינוּ',             en:'Ezras Avoseinu',             slug:'11002487' },
-  { num:'57',  he:'שִׁירָה חֲדָשָׁה',                en:'Shirah Chadashah',           slug:'11002489' },
-  { num:'58',  he:'שְׁמוֹנֶה עֶשְׂרֵה',              en:'Shmoneh Esrei',              slug:'11002491' },
-  { num:'64',  he:'אֱלֹקֵינוּ — תַּחֲנוּן',          en:'Elokeinu — Tachanun',        slug:'11002579' },
-  { num:'65',  he:'וְהוּא רַחוּם',                   en:'VeHu Rachum',                slug:'11002581' },
-  { num:'66',  he:'אָבִינוּ מַלְכֵּנוּ',              en:'Avinu Malkeinu (Tachanun)',  slug:'11002584' },
-  { num:'67',  he:'אֵ-ל אֶרֶךְ אַפַּיִם',            en:'Kel Erech Apayim',           slug:'11002586' },
-  { num:'68',  he:'אַשְׁרֵי',                         en:'Ashrei',                     slug:'11002589' },
-  { num:'69',  he:'לַמְנַצֵּחַ יַעַנְךָ',            en:'Lamnatzeach Yaancha',        slug:'11002592' },
-  { num:'70',  he:'וּבָא לְצִיּוֹן',                 en:'Uvuh Letziyon',              slug:'11002594' },
-  { num:'71',  he:'תְּפִלָּה לְדָוִד',               en:'Tefillah LeDovid',           slug:'11002601' },
-  { num:'72',  he:'בֵּית יַעֲקֹב',                   en:'Bais Yaakov',                slug:'11002603' },
-  { num:'73a', he:'שִׁיר שֶׁל יוֹם — ראשון',         en:'Shir Shel Yom — Sunday',     slug:'11002605' },
-  { num:'73b', he:'שִׁיר שֶׁל יוֹם — שני',           en:'Shir Shel Yom — Monday',     slug:'11002607' },
-  { num:'73c', he:'שִׁיר שֶׁל יוֹם — שלישי',         en:'Shir Shel Yom — Tuesday',    slug:'11002609' },
-  { num:'73d', he:'שִׁיר שֶׁל יוֹם — רביעי',         en:'Shir Shel Yom — Wednesday',  slug:'11002611' },
-  { num:'73e', he:'שִׁיר שֶׁל יוֹם — חמישי',         en:'Shir Shel Yom — Thursday',   slug:'11002613' },
-  { num:'73f', he:'שִׁיר שֶׁל יוֹם — שישי',          en:'Shir Shel Yom — Friday',     slug:'11002615' },
-  { num:'74',  he:'הוֹשִׁיעֵנוּ',                    en:'Hoshieinu (post-Shir)',       slug:'11002617' },
-  { num:'75',  he:'קַוֵּה',                           en:'Kavei',                      slug:'11002619' },
-  { num:'76',  he:'עָלֵינוּ',                         en:'Aleinu',                     slug:'11002621' },
-  { num:'77',  he:'שֵׁשׁ זְכִירוֹת',                 en:'Sheis Zechiros',             slug:'11002623' },
+  { num:'3',   he:'אֱלֹקֵינוּ וֵאלֹקֵי אֲבוֹתֵינוּ', en:'Elokeinu Veilokei Avoseinu', sc:'10992761_tefillah_3_elokeinu' },
+  { num:'4',   he:'וַיְהִי אַחַר',                    en:'Vayehi Achar',               sc:'10992763_tefillah_4_vayehi_achar' },
+  { num:'26',  he:'הוֹשִׁיעֵנוּ',                     en:'Hoshieinu',                  sc:'11002418_tefillah_26_hoshieinu' },
+  { num:'33',  he:'הַלְלוּקָהּ הַלְלִי',              en:'Halelukah Haleli',           sc:'11002436_tefillah_33_halelukah_haleli' },
+  { num:'37',  he:'הַלְלוּקָהּ הַלְלוּ אֵל',          en:'Halelukah Halelu Keil',      sc:'11002444_tefillah_37_halelukah_halelu_keil' },
+  { num:'38',  he:'בָּרוּךְ ה׳ לְעוֹלָם',             en:'Baruch Hashem LeOlam',       sc:'11002448_tefillah_38_baruch_hashem_leolam' },
+  { num:'41',  he:'וַיּוֹשַׁע',                       en:'VaYosha',                    sc:'11002454_tefillah_41_vayosha' },
+  { num:'42',  he:'אָז יָשִׁיר',                      en:'Az Yashir',                  sc:'11002456_tefillah_42_az_yashir' },
+  { num:'43',  he:'יִשְׁתַּבַּח',                     en:'Yishtabach',                 sc:'11002458_tefillah_43_yishtabach' },
+  { num:'44',  he:'בָּרוּךְ יוֹצֵר',                  en:'Baruch Yotzeir',             sc:'11002461_tefillah_44_baruch_yotzeir' },
+  { num:'45',  he:'הַמֵּאִיר לָאָרֶץ',                en:'Hameiir LaAretz',            sc:'11002463_tefillah_45_hameiir_laaretz' },
+  { num:'46',  he:'תִּתְבָּרֵךְ',                     en:'Tisbareich',                 sc:'11002465_tefillah_46_tisbareich' },
+  { num:'47',  he:'אֶת שֵׁם הָאֵ-ל',                 en:'Es Shem HaKel',              sc:'11002467_tefillah_47_es_shem_hakel' },
+  { num:'48',  he:'קָדוֹשׁ',                          en:'Kadosh',                     sc:'11002469_tefillah_48_kadosh' },
+  { num:'49',  he:'לָאֵ-ל בָּרוּךְ',                  en:'LaKeil Baruch',              sc:'11002471_tefillah_49_lakeil_baruch' },
+  { num:'50',  he:'אַהֲבַת עוֹלָם',                   en:'Ahavas Olam',                sc:'11002473_tefillah_50_ahavas_olam' },
+  { num:'51',  he:'שְׁמַע יִשְׂרָאֵל',               en:'Shema Yisrael',              sc:'11002476_tefillah_51_shema_yisrael' },
+  { num:'52',  he:'וְהָיָה',                          en:'VeHayah',                    sc:'11002478_tefillah_52_vehayah' },
+  { num:'53',  he:'וַיֹּאמֶר',                        en:'VaYomer',                    sc:'11002480_tefillah_53_vayomer' },
+  { num:'54',  he:'וְיַצִּיב',                        en:'Vyatziv',                    sc:'11002483_tefillah_54_vyatziv' },
+  { num:'55',  he:'אֶל הָרִאשׁוֹנִים',               en:'Al HaRishonim',              sc:'11002485_tefillah_55_al_harishonim' },
+  { num:'56',  he:'עֶזְרַת אֲבוֹתֵינוּ',             en:'Ezras Avoseinu',             sc:'11002487_tefillah_56_ezras_avoseinu' },
+  { num:'57',  he:'שִׁירָה חֲדָשָׁה',                en:'Shirah Chadashah',           sc:'11002489_tefillah_57_shirah_chadashah' },
+  { num:'58',  he:'שְׁמוֹנֶה עֶשְׂרֵה',              en:'Shmoneh Esrei',              sc:'11002491_tefillah_58_shmoneh_esrei' },
+  { num:'64',  he:'אֱלֹקֵינוּ — תַּחֲנוּן',          en:'Elokeinu — Tachanun',        sc:'11002579_tefillah_64_elokeinu_tachanun' },
+  { num:'65',  he:'וְהוּא רַחוּם',                   en:'VeHu Rachum',                sc:'11002581_tefillah_65_vehu_rachum' },
+  { num:'66',  he:'אָבִינוּ מַלְכֵּנוּ',              en:'Avinu Malkeinu',             sc:'11002584_tefillah_66_avinu_malkeinu' },
+  { num:'67',  he:'אֵ-ל אֶרֶךְ אַפַּיִם',            en:'Kel Erech Apayim',           sc:'11002586_tefillah_67_kel_erech_apayim' },
+  { num:'68',  he:'אַשְׁרֵי',                         en:'Ashrei',                     sc:'11002589_tefillah_68_ashrei' },
+  { num:'69',  he:'לַמְנַצֵּחַ יַעַנְךָ',            en:'Lamnatzeach Yaancha',        sc:'11002592_tefillah_69_lamnatzeach_yaancha' },
+  { num:'70',  he:'וּבָא לְצִיּוֹן',                 en:'Uvuh Letziyon',              sc:'11002594_tefillah_70_uvuh_letziyon' },
+  { num:'71',  he:'תְּפִלָּה לְדָוִד',               en:'Tefillah LeDovid',           sc:'11002601_tefillah_71_tefillah_ledovid' },
+  { num:'72',  he:'בֵּית יַעֲקֹב',                   en:'Bais Yaakov',                sc:'11002603_tefillah_72_bais_yaakov' },
+  { num:'73a', he:'שִׁיר שֶׁל יוֹם — ראשון',         en:'Shir Shel Yom — Sunday',     sc:'11002605_tefillah_73_sunday_shir_shel_yom' },
+  { num:'73b', he:'שִׁיר שֶׁל יוֹם — שני',           en:'Shir Shel Yom — Monday',     sc:'11002607_tefillah_73_monday_shir_shel_yom' },
+  { num:'73c', he:'שִׁיר שֶׁל יוֹם — שלישי',         en:'Shir Shel Yom — Tuesday',    sc:'11002609_tefillah_73_tuesday_shir_shel_yom' },
+  { num:'73d', he:'שִׁיר שֶׁל יוֹם — רביעי',         en:'Shir Shel Yom — Wednesday',  sc:'11002611_tefillah_73_wednesday_shir_shel_yom' },
+  { num:'73e', he:'שִׁיר שֶׁל יוֹם — חמישי',         en:'Shir Shel Yom — Thursday',   sc:'11002613_tefillah_73_thursday_shir_shel_yom' },
+  { num:'73f', he:'שִׁיר שֶׁל יוֹם — שישי',          en:'Shir Shel Yom — Friday',     sc:'11002615_tefillah_73_friday_shir_shel_yom' },
+  { num:'74',  he:'הוֹשִׁיעֵנוּ',                    en:'Hoshieinu (post-Shir)',       sc:'11002617_tefillah_74_hoshieinu' },
+  { num:'75',  he:'קַוֵּה',                           en:'Kavei',                      sc:'11002619_tefillah_75_kavei' },
+  { num:'76',  he:'עָלֵינוּ',                         en:'Aleinu',                     sc:'11002621_tefillah_76_aleinu' },
+  { num:'77',  he:'שֵׁשׁ זְכִירוֹת',                 en:'Sheis Zechiros',             sc:'11002623_tefillah_77_sheis_zechiros' },
 ];
 
-// ── State ──
-let widget, scTracks = [], slugMap = {}, cur = -1, spd = 1.25;
-let posMs = 0, durMs = 0, ticker = null, ready = false;
+const USER = 'binyomin-pelman';
+let cur = -1;
+let spd = 1;
 
-// ── Boot — SC is defined synchronously since the script tag is above us ──
-widget = SC.Widget(document.getElementById('sc-frame'));
+// ── Build iframe URL for a prayer ──
+// Using the direct track URL — no playlist loading needed, instant
+function scUrl(p) {
+  const trackUrl = encodeURIComponent(`https://soundcloud.com/${USER}/${p.sc}`);
+  return `https://w.soundcloud.com/player/?url=${trackUrl}&auto_play=true&buying=false&liking=false&download=false&sharing=false&show_artwork=false&show_comments=false&show_playcount=false&show_user=false&hide_related=true&visual=false&color=%23c8981e`;
+}
 
-widget.bind(SC.Widget.Events.READY, () => {
-  ready = true;
-
-  widget.getTracks(tracks => {
-    scTracks = tracks;
-    // Build slug → playlist index map from track titles
-    tracks.forEach((t, i) => {
-      const m = String(t.title).match(/^(\d+)/);
-      if (m) slugMap[m[1]] = i;
-    });
-    buildMenu();
-    enableControls();
-    setStatus('ready', 'Ready — select a prayer');
-  });
-
-  widget.bind(SC.Widget.Events.PLAY, () => {
-    document.getElementById('play-btn').textContent = '⏸';
-    setStatus('playing', 'Playing');
-    startTicker();
-  });
-
-  widget.bind(SC.Widget.Events.PAUSE, () => {
-    document.getElementById('play-btn').textContent = '▶';
-    setStatus('ready', 'Paused');
-  });
-
-  widget.bind(SC.Widget.Events.FINISH, () => {
-    document.getElementById('play-btn').textContent = '▶';
-    setStatus('ready', 'Finished');
-    stopTicker();
-    if (cur < PRAYERS.length - 1) setTimeout(() => loadPrayer(cur + 1), 600);
-  });
-
-  widget.bind(SC.Widget.Events.PLAY_PROGRESS, e => {
-    posMs = e.currentPosition;
-    if (e.relativePosition > 0) durMs = e.currentPosition / e.relativePosition;
-    updProg();
-  });
-});
-
-// ── Menu ──
+// ── Build menu ──
 function buildMenu() {
   const m = document.getElementById('menu');
   m.innerHTML = '';
@@ -269,124 +255,75 @@ function buildMenu() {
   });
 }
 
-// ── Load prayer ──
+// ── Load prayer — just swap the iframe src ──
 function loadPrayer(idx) {
-  if (!ready) return;
   cur = idx;
   const p = PRAYERS[idx];
 
-  // Update UI
+  // Update header
   document.getElementById('ttl').textContent = p.he;
-  document.getElementById('tsub').textContent = `Tefillah ${p.num} · ${p.en}`;
+  document.getElementById('tsub').textContent = `תְּפִלָּה ${p.num} · ${p.en}`;
+
+  // Update hero
   document.getElementById('pd-num').textContent = `תְּפִלָּה ${p.num}`;
   document.getElementById('pd-he').textContent = p.he;
   document.getElementById('pd-en').textContent = p.en;
-  document.getElementById('tnm').textContent = p.he;
+
+  // Update nav bar
+  document.getElementById('sc-track-name').textContent = `${p.num}. ${p.he}`;
+  document.getElementById('sc-status').textContent = 'Loading…';
+
+  // Swap iframe — this is the key fix: one lightweight track iframe, no playlist
+  const frame = document.getElementById('sc-frame');
+  frame.src = scUrl(p);
+  frame.onload = () => {
+    document.getElementById('sc-status').textContent = '';
+    applySpeed();
+  };
+
+  // Enable nav buttons
+  document.getElementById('b-prev').disabled = idx === 0;
+  document.getElementById('b-next').disabled = idx === PRAYERS.length - 1;
+
   buildMenu();
-  setStatus('loading', 'Loading track…');
-  posMs = 0; durMs = 0; updProg();
-
-  const scIdx = slugMap[p.slug];
-  if (scIdx === undefined) {
-    setStatus('error', 'Track not found in playlist');
-    return;
-  }
-
-  // Skip to track then play
-  widget.skip(scIdx);
-  setTimeout(() => widget.play(), 400);
 }
 
-// ── Progress ──
-function startTicker() {
-  stopTicker();
-  ticker = setInterval(() => {
-    widget.getPosition(p => { posMs = p; updProg(); });
-    widget.getDuration(d => { durMs = d; updProg(); });
-  }, 300);
-}
-function stopTicker() { if (ticker) { clearInterval(ticker); ticker = null; } }
-
-function updProg() {
-  const pct = durMs > 0 ? (posMs / durMs) * 100 : 0;
-  document.getElementById('prog-fill').style.width = pct + '%';
-  document.getElementById('prog-thumb').style.right = (100 - pct) + '%';
-  const fmt = ms => { const s = ms/1000, m = Math.floor(s/60), sec = Math.floor(s%60); return m+':'+String(sec).padStart(2,'0'); };
-  document.getElementById('td').textContent = fmt(posMs) + ' / ' + fmt(durMs);
-}
-
-// Click progress bar to seek
-document.getElementById('prog-wrap').addEventListener('click', e => {
-  if (!ready || durMs === 0) return;
-  const r = e.currentTarget.getBoundingClientRect();
-  const pct = (e.clientX - r.left) / r.width;
-  widget.seekTo(pct * durMs);
-});
-
-// ── Status pill ──
-function setStatus(type, txt) {
-  const pill = document.getElementById('status-pill');
-  const typeMap = { loading:'s-loading', ready:'s-ready', playing:'s-playing', error:'s-error' };
-  pill.className = 'status-pill ' + (typeMap[type] || 's-ready');
-  // Icon
-  let icon = '';
-  if (type === 'loading') icon = '<div class="pill-spin"></div>';
-  else if (type === 'playing') icon = '<div class="pill-dot pulse"></div>';
-  else icon = '<div class="pill-dot"></div>';
-  document.getElementById('status-txt').textContent = txt;
-  // Replace first child with icon
-  const existing = pill.querySelector('.pill-dot,.pill-spin');
-  if (existing) existing.remove();
-  pill.insertAdjacentHTML('afterbegin', icon);
-}
-
-// ── Enable controls after ready ──
-function enableControls() {
-  ['play-btn','b-prev','b-rew','b-fwd','b-next'].forEach(id => {
-    document.getElementById(id).disabled = false;
+// ── Speed — apply to any audio in the page after iframe loads ──
+function applySpeed() {
+  document.querySelectorAll('audio').forEach(a => {
+    try { a.playbackRate = spd; } catch(e) {}
   });
 }
 
-// ── Control buttons ──
-document.getElementById('play-btn').addEventListener('click', () => {
-  if (!ready) return;
-  if (cur === -1) { loadPrayer(0); return; }
-  widget.toggle();
-});
-document.getElementById('b-prev').addEventListener('click', () => { if (cur > 0) loadPrayer(cur - 1); });
-document.getElementById('b-next').addEventListener('click', () => { if (cur < PRAYERS.length - 1) loadPrayer(cur + 1); });
-document.getElementById('b-rew').addEventListener('click', () => { if (ready) widget.seekTo(Math.max(0, posMs - 5000)); });
-document.getElementById('b-fwd').addEventListener('click', () => { if (ready) widget.seekTo(posMs + 5000); });
-
-// ── Speed ──
-// SC iframe is cross-origin, so we apply speed to any <audio> on the page
-// AND intercept via a MutationObserver for any audio SC injects at top level.
-function applySpeed(s) {
-  spd = s;
-  document.querySelectorAll('audio').forEach(a => { try { a.playbackRate = s; } catch(e){} });
-}
-// Watch for audio elements SC might add to the page
+// Watch for audio elements
 new MutationObserver(() => {
-  document.querySelectorAll('audio').forEach(a => { try { a.playbackRate = spd; } catch(e){} });
-}).observe(document.body, { childList: true, subtree: true });
+  document.querySelectorAll('audio').forEach(a => {
+    try { a.playbackRate = spd; } catch(e) {}
+  });
+}).observe(document.documentElement, { childList: true, subtree: true });
 
+// Speed buttons
 document.querySelectorAll('.sp-btn').forEach(b => {
   b.addEventListener('click', () => {
+    spd = parseFloat(b.dataset.s);
     document.querySelectorAll('.sp-btn').forEach(x => x.classList.remove('on'));
     b.classList.add('on');
-    applySpeed(parseFloat(b.dataset.s));
+    applySpeed();
   });
 });
 
-// ── Keyboard ──
+// Prev / Next
+document.getElementById('b-prev').addEventListener('click', () => { if (cur > 0) loadPrayer(cur - 1); });
+document.getElementById('b-next').addEventListener('click', () => { if (cur < PRAYERS.length - 1) loadPrayer(cur + 1); });
+
+// Keyboard
 document.addEventListener('keydown', e => {
-  if (e.target.tagName === 'INPUT') return;
-  if (e.key === ' ') { e.preventDefault(); document.getElementById('play-btn').click(); }
-  if (e.key === 'ArrowLeft')  document.getElementById('b-rew').click();
-  if (e.key === 'ArrowRight') document.getElementById('b-fwd').click();
-  if (e.key === 'ArrowUp')    { e.preventDefault(); document.getElementById('b-prev').click(); }
-  if (e.key === 'ArrowDown')  { e.preventDefault(); document.getElementById('b-next').click(); }
+  if (e.key === 'ArrowUp')   { e.preventDefault(); if (cur > 0) loadPrayer(cur - 1); }
+  if (e.key === 'ArrowDown') { e.preventDefault(); if (cur < PRAYERS.length - 1) loadPrayer(cur + 1); }
 });
+
+// Init
+buildMenu();
 </script>
 </body>
 </html>
