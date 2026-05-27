@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<title>סידור — Tefilah Player</title>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Assistant:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4efe4;
+  --white:#fff;
+  --sidebar:#12100c;
+  --gold:#c8981e;
+  --gold2:#e8c455;
+  --gold-dim:#7a6010;
+  --ink:#1a1208;
+  --ink2:#3a2a10;
+  --muted:#888070;
+  --border:#ddd0b5;
+  --highlight:#ffe066;
+  --played:#1a3f8f;
+  --he:'Frank Ruhl Libre',serif;
+  --ui:'Assistant',sans-serif;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--ui);-webkit-font-smoothing:antialiased}
+#app{display:flex;height:100dvh;overflow:hidden}
+
+/* ── SIDEBAR ── */
+#sb{width:252px;flex-shrink:0;background:var(--sidebar);display:flex;flex-direction:column;overflow:hidden}
+.sb-logo{padding:16px 16px 13px;border-bottom:1px solid rgba(200,152,30,.18);flex-shrink:0}
+.sb-logo-he{font-family:var(--he);font-size:1.85rem;font-weight:900;color:var(--gold2);letter-spacing:.03em;line-height:1}
+.sb-logo-en{font-family:var(--ui);font-size:.58rem;color:var(--gold-dim);letter-spacing:.22em;text-transform:uppercase;margin-top:3px}
+.sb-hd{font-family:var(--ui);font-size:.58rem;font-weight:700;color:var(--gold-dim);letter-spacing:.2em;text-transform:uppercase;padding:11px 16px 5px;flex-shrink:0}
+#menu{flex:1;overflow-y:auto;padding-bottom:8px}
+#menu::-webkit-scrollbar{width:4px}
+#menu::-webkit-scrollbar-thumb{background:rgba(200,152,30,.3);border-radius:2px}
+.mi{display:flex;align-items:center;gap:9px;padding:8px 14px;cursor:pointer;border-right:3px solid transparent;transition:background .1s;user-select:none}
+.mi:hover{background:rgba(255,255,255,.06)}
+.mi.active{background:rgba(200,152,30,.12);border-right-color:var(--gold2)}
+.mi.soon{opacity:.38;cursor:default}
+.mi-num{font-family:var(--ui);font-size:.58rem;font-weight:700;color:rgba(200,152,30,.3);min-width:24px;flex-shrink:0}
+.mi.active .mi-num{color:var(--gold2)}
+.mi-texts{min-width:0}
+.mi-he{font-family:var(--he);font-size:.92rem;font-weight:700;color:#d8ccb4;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mi-en{font-family:var(--ui);font-size:.6rem;color:var(--gold-dim);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mi.active .mi-he{color:var(--gold2)}
+.mi.active .mi-en{color:#c8a030}
+
+/* ── MAIN ── */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+/* ── TOPBAR ── */
+#topbar{background:var(--white);border-bottom:1px solid var(--border);padding:9px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.tb-info{min-width:0;flex:1}
+.tb-title{font-family:var(--he);font-size:1.2rem;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-sub{font-family:var(--ui);font-size:.64rem;color:var(--muted);margin-top:1px}
+
+/* ── TEXT AREA ── */
+#text-area{
+  flex:1;overflow-y:auto;padding:24px 32px 16px;
+  scroll-behavior:smooth;
+  background:var(--bg);
+}
+#text-area::-webkit-scrollbar{width:5px}
+#text-area::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.block{margin-bottom:20px}
+.block-label{
+  font-family:var(--ui);font-size:.6rem;font-weight:700;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+  margin-bottom:8px;display:flex;align-items:center;gap:6px;
+}
+.block-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.prayer-text{
+  font-family:var(--he);font-size:1.65rem;line-height:2.1;
+  text-align:right;direction:rtl;color:var(--ink);
+}
+
+/* word highlighting */
+.w{
+  cursor:pointer;border-radius:3px;padding:0 2px;
+  transition:background .07s;display:inline;
+}
+.w:hover{background:rgba(200,152,30,.2)}
+.w.now{
+  background:var(--highlight);
+  box-shadow:0 0 0 1.5px rgba(180,130,0,.5);
+  border-radius:3px;
+}
+.w.done{color:var(--played)}
+
+/* welcome screen */
+#welcome{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:12px;padding:32px;text-align:center;
+}
+.wlc-he{font-family:var(--he);font-size:3rem;font-weight:900;color:var(--ink)}
+.wlc-sub{font-family:var(--ui);font-size:.85rem;color:var(--muted)}
+.wlc-hint{font-family:var(--ui);font-size:.75rem;color:var(--gold);
+  background:rgba(200,152,30,.08);border:1px solid rgba(200,152,30,.2);
+  border-radius:8px;padding:10px 18px}
+
+/* ── PLAYER BAR ── */
+#player{
+  background:var(--sidebar);
+  border-top:1px solid rgba(200,152,30,.15);
+  padding:8px 16px 10px;
+  flex-shrink:0;display:flex;flex-direction:column;gap:6px;
+}
+
+/* progress */
+#prog-wrap{
+  height:5px;background:rgba(255,255,255,.1);border-radius:3px;
+  cursor:pointer;position:relative;
+}
+#prog-fill{
+  height:100%;border-radius:3px;
+  background:linear-gradient(to left,var(--gold),var(--gold2));
+  width:0%;pointer-events:none;
+}
+#prog-thumb{
+  position:absolute;top:50%;right:0%;
+  width:13px;height:13px;border-radius:50%;
+  background:var(--gold2);border:2px solid #fff;
+  transform:translate(50%,-50%);pointer-events:none;
+}
+
+/* controls */
+#ctrls{display:flex;align-items:center;gap:5px}
+.cb{
+  background:transparent;border:none;color:rgba(255,255,255,.6);
+  cursor:pointer;font-size:1rem;width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .12s;flex-shrink:0;
+}
+.cb:hover{color:#fff;background:rgba(255,255,255,.1)}
+.cb:active{transform:scale(.9)}
+.cb:disabled{opacity:.28;cursor:default;transform:none}
+#play-btn{width:40px;height:40px;background:var(--gold);border-radius:50%;color:#fff;font-size:1.1rem;flex-shrink:0}
+#play-btn:hover:not(:disabled){background:var(--gold2);color:var(--ink)}
+.td{font-family:var(--ui);font-size:.64rem;color:rgba(255,255,255,.35);white-space:nowrap;flex-shrink:0}
+.csp{flex:1}
+#tnm{font-family:var(--he);font-size:.88rem;color:rgba(255,255,255,.65);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px;flex-shrink:0}
+
+/* speed */
+#spd-grp{
+  display:flex;align-items:center;gap:2px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(200,152,30,.22);
+  border-radius:18px;padding:2px;flex-shrink:0;
+}
+.sp-btn{
+  background:transparent;border:none;
+  color:rgba(255,255,255,.4);font-family:var(--ui);font-size:.6rem;font-weight:700;
+  padding:3px 7px;border-radius:14px;cursor:pointer;transition:all .12s;white-space:nowrap;
+}
+.sp-btn:hover{color:#fff}
+.sp-btn.on{background:var(--gold);color:#fff}
+
+@media(max-width:600px){
+  #sb{display:none}
+  .td{display:none}
+  #tnm{max-width:90px}
+  #text-area{padding:16px 14px}
+  .prayer-text{font-size:1.4rem}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- SIDEBAR -->
+<div id="sb">
+  <div class="sb-logo">
+    <div class="sb-logo-he">סידור</div>
+    <div class="sb-logo-en">Tefilah Player</div>
+  </div>
+  <div class="sb-hd">Shacharit · שַׁחֲרִית</div>
+  <div id="menu"></div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="topbar">
+    <div class="tb-info">
+      <div class="tb-title" id="ttl">סידור — Tefilah Player</div>
+      <div class="tb-sub" id="tsub">Select a prayer to begin</div>
+    </div>
+  </div>
+
+  <!-- Text display -->
+  <div id="text-area">
+    <div id="welcome">
+      <div class="wlc-he">סִדּוּר</div>
+      <div class="wlc-sub">Shacharit · Morning Prayers</div>
+      <div class="wlc-hint">👈 Select a prayer from the sidebar to see the text and play the recording</div>
+    </div>
+    <div id="pdisplay" style="display:none"></div>
+  </div>
+
+  <!-- Player -->
+  <div id="player">
+    <div id="prog-wrap">
+      <div id="prog-fill"></div>
+      <div id="prog-thumb"></div>
+    </div>
+    <div id="ctrls">
+      <button class="cb" id="b-prev" disabled title="Previous">⏮</button>
+      <button class="cb" id="b-rew"  disabled title="−5s">⏪</button>
+      <button class="cb" id="play-btn" disabled>▶</button>
+      <button class="cb" id="b-fwd"  disabled title="+5s">⏩</button>
+      <button class="cb" id="b-next" disabled title="Next">⏭</button>
+      <span class="td" id="td">0:00 / 0:00</span>
+      <div class="csp"></div>
+      <span id="tnm">—</span>
+      <div id="spd-grp">
+        <button class="sp-btn" data-s="0.75">0.75×</button>
+        <button class="sp-btn on" data-s="1">1×</button>
+        <button class="sp-btn" data-s="1.25">1.25×</button>
+        <button class="sp-btn" data-s="1.5">1.5×</button>
+        <button class="sp-btn" data-s="2">2×</button>
+        <button class="sp-btn" data-s="3">3×</button>
+        <button class="sp-btn" data-s="4">4×</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<audio id="aud"></audio>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────
+// PRAYERS — Hebrew text with per-word timestamps (seconds)
+// Audio files are served from /audio/ on Vercel (put MP3s in public/audio/)
+// ─────────────────────────────────────────────────────────────────────
+const PRAYERS = [
+{
+  num:'3', he:'אֱלֹקֵינוּ וֵאלֹקֵי אֲבוֹתֵינוּ', en:'Elokeinu Veilokei Avoseinu',
+  audio:'10992761_Tefillah_03_Elokeinu_Veilokei_Avoseinu.mp3',
+  blocks:[
+    { label:'', words:[
+      {t:'אֱלֹקֵינוּ',s:0.0},{t:'וֵאלֹקֵי',s:0.9},{t:'אֲבוֹתֵינוּ,',s:1.7},
+      {t:'אֱלֹקֵי',s:2.8},{t:'אַבְרָהָם,',s:3.4},{t:'אֱלֹקֵי',s:4.4},
+      {t:'יִצְחָק,',s:5.0},{t:'וֵאלֹקֵי',s:5.9},{t:'יַעֲקֹב,',s:6.5},
+      {t:'הָאֵ-ל',s:7.5},{t:'הַגָּדוֹל',s:8.2},{t:'הַגִּבּוֹר',s:8.9},
+      {t:'וְהַנּוֹרָא,',s:9.7},{t:'אֵ-ל',s:10.8},{t:'עֶלְיוֹן.',s:11.3},
+    ]},
+    { label:'', words:[
+      {t:'גּוֹמֵל',s:12.5},{t:'חֲסָדִים',s:13.2},{t:'טוֹבִים,',s:13.9},
+      {t:'וְקוֹנֵה',s:15.0},{t:'הַכֹּל,',s:15.7},
+      {t:'וְזוֹכֵר',s:16.8},{t:'חַסְדֵי',s:17.4},
+      {t:'אָבוֹת,',s:18.0},{t:'וּמֵבִיא',s:19.1},
+      {t:'גּוֹאֵל',s:19.8},{t:'לִבְנֵי',s:20.5},{t:'בְנֵיהֶם,',s:21.1},
+      {t:'לְמַעַן',s:22.2},{t:'שְׁמוֹ',s:22.8},{t:'בְּאַהֲבָה.',s:23.4},
+    ]},
+  ]
+},
+{
+  num:'4', he:'וַיְהִי אַחַר', en:'Vayehi Achar',
+  audio:'10992763_Tefillah_04_Vayehi_Achar.mp3',
+  blocks:[
+    { label:'', words:[
+      {t:'וַיְהִי',s:0.0},{t:'אַחַר',s:0.6},{t:'הַדְּבָרִים',s:1.1},{t:'הָאֵלֶּה,',s:1.8},
+      {t:'וְהָאֱלֹקִים',s:2.9},{t:'נִסָּה',s:3.8},{t:'אֶת-אַבְרָהָם,',s:4.4},
+      {t:'וַיֹּאמֶר',s:5.6},{t:'אֵלָיו',s:6.1},{t:'אַבְרָהָם,',s:6.6},
+      {t:'וַיֹּאמֶר',s:7.6},{t:'הִנֵּנִי.',s:8.1},
+    ]},
+    { label:'', words:[
+      {t:'וַיֹּאמֶר,',s:9.5},{t:'קַח-נָא',s:10.1},{t:'אֶת-בִּנְךָ',s:10.8},
+      {t:'אֶת-יְחִידְךָ',s:11.7},{t:'אֲשֶׁר-אָהַבְתָּ',s:12.7},
+      {t:'אֶת-יִצְחָק,',s:13.8},{t:'וְלֶךְ-לְךָ',s:14.9},
+      {t:'אֶל-אֶרֶץ',s:15.7},{t:'הַמֹּרִיָּה,',s:16.3},
+      {t:'וְהַעֲלֵהוּ',s:17.4},{t:'שָׁם',s:18.2},
+      {t:'לְעֹלָה',s:18.7},{t:'עַל',s:19.5},
+      {t:'אַחַד',s:19.9},{t:'הֶהָרִים',s:20.4},
+      {t:'אֲשֶׁר',s:21.2},{t:'אֹמַר',s:21.6},{t:'אֵלֶיךָ.',s:22.1},
+    ]},
+  ]
+},
+{
+  num:'33', he:'הַלְלוּקָהּ הַלְלִי', en:'Halelukah Haleli',
+  audio:'11002436_Tefillah_33_Halelukah_Haleli.mp3',
+  blocks:[
+    { label:'תהלים קמ״ו', words:[
+      {t:'הַלְלוּיָהּ,',s:0.0},{t:'הַלְלִי',s:0.9},{t:'נַפְשִׁי',s:1.5},{t:'אֶת-ה׳.',s:2.1},
+      {t:'אֲהַלְלָה',s:3.2},{t:'ה׳',s:3.9},{t:'בְּחַיָּי,',s:4.3},
+      {t:'אֲזַמְּרָה',s:5.3},{t:'לֵאלֹקַי',s:5.9},{t:'בְּעוֹדִי.',s:6.6},
+    ]},
+    { label:'', words:[
+      {t:'אַל-תִּבְטְחוּ',s:8.0},{t:'בִנְדִיבִים,',s:8.9},
+      {t:'בְּבֶן-אָדָם',s:10.1},{t:'שֶׁאֵין',s:11.0},{t:'לוֹ',s:11.4},{t:'תְשׁוּעָה.',s:11.8},
+    ]},
+    { label:'', words:[
+      {t:'תֵּצֵא',s:13.5},{t:'רוּחוֹ',s:14.1},{t:'יָשֻׁב',s:14.7},{t:'לְאַדְמָתוֹ,',s:15.2},
+      {t:'בַּיּוֹם',s:16.3},{t:'הַהוּא',s:16.8},{t:'אָבְדוּ',s:17.3},{t:'עֶשְׁתֹּנֹתָיו.',s:17.9},
+    ]},
+  ]
+},
+{
+  num:'37', he:'הַלְלוּקָהּ הַלְלוּ אֵל', en:'Halelukah Halelu Keil',
+  audio:'11002444_Tefillah_37_Halelukah_Halelu_Keil.mp3',
+  blocks:[
+    { label:'תהלים ק״נ', words:[
+      {t:'הַלְלוּיָהּ,',s:0.0},{t:'הַלְלוּ-אֵל',s:0.8},{t:'בְּקָדְשׁוֹ,',s:1.5},
+      {t:'הַלְלוּהוּ',s:2.6},{t:'בִּרְקִיעַ',s:3.2},{t:'עֻזּוֹ.',s:3.9},
+    ]},
+    { label:'', words:[
+      {t:'הַלְלוּהוּ',s:5.2},{t:'בִגְבוּרֹתָיו,',s:5.8},
+      {t:'הַלְלוּהוּ',s:7.1},{t:'כְּרֹב',s:7.7},{t:'גֻּדְלוֹ.',s:8.2},
+    ]},
+    { label:'', words:[
+      {t:'הַלְלוּהוּ',s:9.5},{t:'בְּתֵקַע',s:10.0},{t:'שׁוֹפָר,',s:10.6},
+      {t:'הַלְלוּהוּ',s:11.6},{t:'בְּנֵבֶל',s:12.1},{t:'וְכִנּוֹר.',s:12.7},
+    ]},
+    { label:'', words:[
+      {t:'הַלְלוּהוּ',s:14.0},{t:'בְתֹף',s:14.5},{t:'וּמָחוֹל,',s:15.0},
+      {t:'הַלְלוּהוּ',s:16.1},{t:'בְּמִנִּים',s:16.6},{t:'וְעוּגָב.',s:17.2},
+    ]},
+    { label:'', words:[
+      {t:'הַלְלוּהוּ',s:18.5},{t:'בְצִלְצְלֵי-שָׁמַע,',s:19.0},
+      {t:'הַלְלוּהוּ',s:20.4},{t:'בְּצִלְצְלֵי',s:20.9},{t:'תְרוּעָה.',s:21.5},
+    ]},
+    { label:'', words:[
+      {t:'כֹּל',s:23.0},{t:'הַנְּשָׁמָה',s:23.5},{t:'תְּהַלֵּל',s:24.2},{t:'יָהּ,',s:24.8},
+      {t:'הַלְלוּיָהּ.',s:25.5},
+    ]},
+  ]
+},
+{
+  num:'41', he:'וַיּוֹשַׁע', en:'VaYosha',
+  audio:'11002454_Tefillah_41_VaYosha.mp3',
+  blocks:[
+    { label:'שמות י״ד', words:[
+      {t:'וַיּוֹשַׁע',s:0.0},{t:'ה׳',s:0.7},{t:'בַּיּוֹם',s:1.1},{t:'הַהוּא',s:1.6},
+      {t:'אֶת-יִשְׂרָאֵל',s:2.1},{t:'מִיַּד',s:3.0},{t:'מִצְרָיִם,',s:3.5},
+      {t:'וַיַּרְא',s:4.5},{t:'יִשְׂרָאֵל',s:5.1},{t:'אֶת-מִצְרַיִם',s:5.7},
+      {t:'מֵת',s:6.6},{t:'עַל-שְׂפַת',s:7.0},{t:'הַיָּם.',s:7.6},
+    ]},
+    { label:'', words:[
+      {t:'וַיַּרְא',s:9.0},{t:'יִשְׂרָאֵל',s:9.6},{t:'אֶת-הַיָּד',s:10.2},
+      {t:'הַגְּדֹלָה',s:11.1},{t:'אֲשֶׁר',s:11.9},{t:'עָשָׂה',s:12.3},
+      {t:'ה׳',s:12.8},{t:'בְּמִצְרַיִם,',s:13.1},
+      {t:'וַיִּירְאוּ',s:14.2},{t:'הָעָם',s:14.9},{t:'אֶת-ה׳,',s:15.3},
+      {t:'וַיַּאֲמִינוּ',s:16.3},{t:'בַּה׳',s:17.1},{t:'וּבְמֹשֶׁה',s:17.5},{t:'עַבְדּוֹ.',s:18.1},
+    ]},
+  ]
+},
+{
+  num:'42', he:'אָז יָשִׁיר', en:'Az Yashir',
+  audio:'11002456_Tefillah_42_Az_Yashir.mp3',
+  blocks:[
+    { label:'שירת הים — שמות ט״ו', words:[
+      {t:'אָז',s:0.0},{t:'יָשִׁיר-מֹשֶׁה',s:0.5},{t:'וּבְנֵי',s:1.4},{t:'יִשְׂרָאֵל',s:1.9},
+      {t:'אֶת-הַשִּׁירָה',s:2.5},{t:'הַזֹּאת',s:3.4},{t:'לַה׳,',s:3.9},
+      {t:'וַיֹּאמְרוּ',s:4.8},{t:'לֵאמֹר:',s:5.4},
+    ]},
+    { label:'', words:[
+      {t:'אָשִׁירָה',s:6.8},{t:'לַה׳',s:7.5},{t:'כִּי-גָאֹה',s:7.9},{t:'גָּאָה,',s:8.6},
+      {t:'סוּס',s:9.5},{t:'וְרֹכְבוֹ',s:9.9},{t:'רָמָה',s:10.5},{t:'בַיָּם.',s:11.0},
+    ]},
+    { label:'', words:[
+      {t:'עָזִּי',s:12.5},{t:'וְזִמְרָת',s:13.0},{t:'יָהּ,',s:13.6},
+      {t:'וַיְהִי-לִי',s:14.5},{t:'לִישׁוּעָה;',s:15.2},
+      {t:'זֶה',s:16.3},{t:'אֵלִי',s:16.7},{t:'וְאַנְוֵהוּ,',s:17.1},
+      {t:'אֱלֹקֵי',s:18.1},{t:'אָבִי',s:18.6},{t:'וַאֲרֹמְמֶנְהוּ.',s:19.1},
+    ]},
+    { label:'', words:[
+      {t:'ה׳',s:21.0},{t:'אִישׁ',s:21.4},{t:'מִלְחָמָה,',s:21.8},
+      {t:'ה׳',s:22.8},{t:'שְׁמוֹ.',s:23.2},
+    ]},
+  ]
+},
+{
+  num:'44', he:'בָּרוּךְ יוֹצֵר', en:'Baruch Yotzeir',
+  audio:'11002461_Tefillah_44_Baruch_Yotzeir.mp3',
+  blocks:[
+    { label:'ברכת יוצר', words:[
+      {t:'בָּרוּךְ',s:0.0},{t:'אַתָּה',s:0.5},{t:'ה׳',s:0.9},
+      {t:'אֱלֹקֵינוּ',s:1.3},{t:'מֶלֶךְ',s:1.9},{t:'הָעוֹלָם,',s:2.3},
+      {t:'יוֹצֵר',s:3.2},{t:'אוֹר',s:3.7},{t:'וּבוֹרֵא',s:4.1},{t:'חֹשֶׁךְ,',s:4.6},
+      {t:'עֹשֶׂה',s:5.5},{t:'שָׁלוֹם',s:5.9},{t:'וּבוֹרֵא',s:6.4},{t:'אֶת-הַכֹּל.',s:6.9},
+    ]},
+  ]
+},
+{
+  num:'45', he:'הַמֵּאִיר לָאָרֶץ', en:'Hameiir LaAretz',
+  audio:'11002463_Tefillah_45_Hameiir_LaAretz.mp3',
+  blocks:[
+    { label:'', words:[
+      {t:'הַמֵּאִיר',s:0.0},{t:'לָאָרֶץ',s:0.7},{t:'וְלַדָּרִים',s:1.3},{t:'עָלֶיהָ',s:2.0},
+      {t:'בְּרַחֲמִים,',s:2.7},{t:'וּבְטוּבוֹ',s:3.8},{t:'מְחַדֵּשׁ',s:4.5},
+      {t:'בְּכָל-יוֹם',s:5.1},{t:'תָּמִיד',s:5.9},{t:'מַעֲשֵׂה',s:6.4},{t:'בְרֵאשִׁית.',s:6.9},
+    ]},
+    { label:'', words:[
+      {t:'מָה',s:8.5},{t:'רַבּוּ',s:8.9},{t:'מַעֲשֶׂיךָ',s:9.3},{t:'ה׳,',s:10.0},
+      {t:'כֻּלָּם',s:10.8},{t:'בְּחָכְמָה',s:11.3},{t:'עָשִׂיתָ,',s:11.9},
+      {t:'מָלְאָה',s:12.9},{t:'הָאָרֶץ',s:13.4},{t:'קִנְיָנֶךָ.',s:14.0},
+    ]},
+    { label:'', words:[
+      {t:'תִּתְבָּרֵךְ',s:15.5},{t:'ה׳',s:16.3},{t:'אֱלֹקֵינוּ',s:16.7},
+      {t:'עַל',s:17.5},{t:'שֶׁבַח',s:17.9},{t:'מַעֲשֵׂה',s:18.4},{t:'יָדֶיךָ,',s:18.9},
+      {t:'וְעַל',s:19.9},{t:'מְאוֹרֵי',s:20.4},{t:'אוֹר',s:20.9},
+      {t:'שֶׁעָשִׂיתָ',s:21.4},{t:'יְפָאֲרוּךָ',s:22.1},{t:'סֶּלָה.',s:22.9},
+    ]},
+  ]
+},
+{
+  num:'47', he:'אֶת שֵׁם הָאֵ-ל', en:'Es Shem HaKel',
+  audio:'11002467_Tefillah_47_Es_Shem_HaKel.mp3',
+  blocks:[
+    { label:'', words:[
+      {t:'אֶת-שֵׁם',s:0.0},{t:'הָאֵ-ל',s:0.6},{t:'הַמֶּלֶךְ',s:1.1},{t:'הַגָּדוֹל',s:1.6},
+      {t:'הַגִּבּוֹר',s:2.2},{t:'וְהַנּוֹרָא',s:2.8},{t:'הַקָּדוֹשׁ',s:3.5},{t:'נְסַפֵּר',s:4.1},
+      {t:'וּנְשַׁבֵּחֲךָ',s:4.7},{t:'וּנְפָאֶרְךָ',s:5.5},
+      {t:'וְנַמְלִיכְךָ',s:6.3},{t:'וְנַזְכִּיר',s:7.1},{t:'שִׁמְךָ',s:7.7},
+      {t:'מַלְכֵּנוּ',s:8.2},{t:'אֱלֹקֵינוּ.',s:8.8},
+    ]},
+  ]
+},
+{
+  num:'48', he:'קָדוֹשׁ', en:'Kadosh',
+  audio:'11002469_Tefillah_48_Kadosh.mp3',
+  blocks:[
+    { label:'קדושה דיוצר', words:[
+      {t:'קָדוֹשׁ,',s:0.0},{t:'קָדוֹשׁ,',s:0.8},{t:'קָדוֹשׁ',s:1.6},
+      {t:'ה׳',s:2.3},{t:'צְבָאוֹת,',s:2.7},
+      {t:'מְלֹא',s:3.7},{t:'כָל-הָאָרֶץ',s:4.2},{t:'כְּבוֹדוֹ.',s:5.0},
+    ]},
+    { label:'', words:[
+      {t:'בָּרוּךְ',s:6.8},{t:'כְּבוֹד-ה׳',s:7.4},{t:'מִמְּקוֹמוֹ.',s:8.0},
+    ]},
+    { label:'', words:[
+      {t:'יִמְלֹךְ',s:9.8},{t:'ה׳',s:10.4},{t:'לְעוֹלָם,',s:10.8},
+      {t:'אֱלֹקַיִךְ',s:11.8},{t:'צִיּוֹן,',s:12.3},
+      {t:'לְדֹר',s:13.2},{t:'וָדֹר,',s:13.7},{t:'הַלְלוּיָהּ.',s:14.2},
+    ]},
+  ]
+},
+{
+  num:'50', he:'אַהֲבַת עוֹלָם', en:'Ahavas Olam',
+  audio:'11002473_Tefillah_50_Ahavas_Olam.mp3',
+  blocks:[
+    { label:'ברכת אהבה', words:[
+      {t:'אַהֲבַת',s:0.0},{t:'עוֹלָם',s:0.6},{t:'בֵּית',s:1.1},{t:'יִשְׂרָאֵל',s:1.5},
+      {t:'עַמְּךָ',s:2.1},{t:'אָהָבְתָּ,',s:2.6},
+      {t:'תּוֹרָה',s:3.6},{t:'וּמִצְוֹת,',s:4.1},
+      {t:'חֻקִּים',s:5.0},{t:'וּמִשְׁפָּטִים',s:5.5},{t:'אוֹתָנוּ',s:6.3},{t:'לִמַּדְתָּ.',s:6.9},
+    ]},
+    { label:'', words:[
+      {t:'עַל',s:8.5},{t:'כֵּן',s:8.9},{t:'ה׳',s:9.2},{t:'אֱלֹקֵינוּ',s:9.6},
+      {t:'בְּשָׁכְבֵנוּ',s:10.3},{t:'וּבְקוּמֵנוּ',s:11.1},
+      {t:'נָשִׂיחַ',s:12.0},{t:'בְּחֻקֶּיךָ,',s:12.6},
+      {t:'וְנִשְׂמַח',s:13.7},{t:'בְּדִבְרֵי',s:14.3},
+      {t:'תוֹרָתֶךָ',s:14.9},{t:'וּבְמִצְוֹתֶיךָ',s:15.6},{t:'לְעוֹלָם',s:16.5},{t:'וָעֶד.',s:17.1},
+    ]},
+    { label:'', words:[
+      {t:'כִּי',s:18.8},{t:'הֵם',s:19.1},{t:'חַיֵּינוּ',s:19.4},{t:'וְאֹרֶךְ',s:20.1},
+      {t:'יָמֵינוּ,',s:20.6},{t:'וּבָהֶם',s:21.6},{t:'נֶהְגֶּה',s:22.1},
+      {t:'יוֹמָם',s:22.7},{t:'וָלָיְלָה.',s:23.2},
+    ]},
+  ]
+},
+{
+  num:'51', he:'שְׁמַע יִשְׂרָאֵל', en:'Shema Yisrael',
+  audio:'11002476_Tefillah_51_Shema_Yisrael.mp3',
+  blocks:[
+    { label:'קבלת עול מלכות שמים', words:[
+      {t:'שְׁמַע',s:0.0},{t:'יִשְׂרָאֵל',s:0.7},
+      {t:'ה׳',s:1.7},{t:'אֱלֹקֵינוּ',s:2.2},{t:'ה׳',s:3.1},{t:'אֶחָד.',s:3.6},
+    ]},
+    { label:'', words:[
+      {t:'בָּרוּךְ',s:5.8},{t:'שֵׁם',s:6.3},{t:'כְּבוֹד',s:6.7},
+      {t:'מַלְכוּתוֹ',s:7.1},{t:'לְעוֹלָם',s:7.8},{t:'וָעֶד.',s:8.4},
+    ]},
+    { label:'וְאָהַבְתָּ', words:[
+      {t:'וְאָהַבְתָּ',s:10.5},{t:'אֵת',s:11.4},{t:'ה׳',s:11.8},
+      {t:'אֱלֹקֶיךָ,',s:12.2},{t:'בְּכָל-לְבָבְךָ',s:13.1},
+      {t:'וּבְכָל-נַפְשְׁךָ',s:14.2},{t:'וּבְכָל-מְאֹדֶךָ.',s:15.4},
+    ]},
+    { label:'', words:[
+      {t:'וְהָיוּ',s:17.5},{t:'הַדְּבָרִים',s:18.0},{t:'הָאֵלֶּה',s:18.7},
+      {t:'אֲשֶׁר',s:19.5},{t:'אָנֹכִי',s:20.0},{t:'מְצַוְּךָ',s:20.5},
+      {t:'הַיּוֹם',s:21.2},{t:'עַל-לְבָבֶךָ.',s:21.9},
+    ]},
+    { label:'', words:[
+      {t:'וְשִׁנַּנְתָּם',s:23.5},{t:'לְבָנֶיךָ',s:24.3},{t:'וְדִבַּרְתָּ',s:25.0},
+      {t:'בָּם,',s:25.8},{t:'בְּשִׁבְתְּךָ',s:26.5},{t:'בְּבֵיתֶךָ',s:27.2},
+      {t:'וּבְלֶכְתְּךָ',s:27.9},{t:'בַדֶּרֶךְ,',s:28.6},
+      {t:'וּבְשָׁכְבְּךָ',s:29.4},{t:'וּבְקוּמֶךָ.',s:30.1},
+    ]},
+  ]
+},
+{
+  num:'53', he:'וַיֹּאמֶר', en:'VaYomer',
+  audio:'11002480_Tefillah_53_VaYomer.mp3',
+  blocks:[
+    { label:'פרשת ציצית — במדבר ט״ו', words:[
+      {t:'וַיֹּאמֶר',s:0.0},{t:'ה׳',s:0.7},{t:'אֶל-מֹשֶׁה',s:1.1},{t:'לֵּאמֹר.',s:1.8},
+      {t:'דַּבֵּר',s:2.9},{t:'אֶל-בְּנֵי',s:3.4},{t:'יִשְׂרָאֵל',s:3.9},
+      {t:'וְאָמַרְתָּ',s:4.6},{t:'אֲלֵהֶם,',s:5.3},
+      {t:'וְעָשׂוּ',s:6.2},{t:'לָהֶם',s:6.7},{t:'צִיצִת',s:7.1},
+      {t:'עַל-כַּנְפֵי',s:7.7},{t:'בִגְדֵיהֶם',s:8.4},
+      {t:'לְדֹרֹתָם,',s:9.1},{t:'וְנָתְנוּ',s:10.2},
+      {t:'עַל-צִיצִת',s:10.8},{t:'הַכָּנָף',s:11.5},
+      {t:'פְּתִיל',s:12.3},{t:'תְּכֵלֶת.',s:12.8},
+    ]},
+    { label:'', words:[
+      {t:'וְהָיָה',s:14.5},{t:'לָכֶם',s:15.0},{t:'לְצִיצִת,',s:15.4},
+      {t:'וּרְאִיתֶם',s:16.3},{t:'אֹתוֹ',s:17.1},{t:'וּזְכַרְתֶּם',s:17.6},
+      {t:'אֶת-כָּל-מִצְוֹת',s:18.5},{t:'ה׳',s:19.6},{t:'וַעֲשִׂיתֶם',s:20.0},{t:'אֹתָם,',s:20.7},
+    ]},
+    { label:'', words:[
+      {t:'אֲנִי',s:23.5},{t:'ה׳',s:24.0},{t:'אֱלֹקֵיכֶם',s:24.4},
+      {t:'אֲשֶׁר',s:25.3},{t:'הוֹצֵאתִי',s:25.7},{t:'אֶתְכֶם',s:26.4},
+      {t:'מֵאֶרֶץ',s:27.1},{t:'מִצְרַיִם',s:27.6},{t:'לִהְיוֹת',s:28.3},
+      {t:'לָכֶם',s:28.9},{t:'לֵאלֹקִים,',s:29.3},
+      {t:'אֲנִי',s:30.4},{t:'ה׳',s:30.9},{t:'אֱלֹקֵיכֶם.',s:31.3},
+    ]},
+  ]
+},
+{
+  num:'54', he:'וְיַצִּיב', en:'Vyatziv',
+  audio:'11002483_Tefillah_54_Vyatziv.mp3',
+  blocks:[
+    { label:'אמת ויציב', words:[
+      {t:'אֱמֶת',s:0.0},{t:'וְיַצִּיב,',s:0.5},{t:'וְנָכוֹן,',s:1.1},{t:'וְקַיָּם,',s:1.7},
+      {t:'וְיָשָׁר,',s:2.3},{t:'וְנֶאֱמָן,',s:2.9},{t:'וְאָהוּב,',s:3.6},
+      {t:'וְחָבִיב,',s:4.2},{t:'וְנֶחְמָד,',s:4.8},{t:'וְנָעִים,',s:5.4},
+      {t:'וְנוֹרָא,',s:6.0},{t:'וְאַדִּיר,',s:6.6},{t:'וּמְתֻקָּן,',s:7.2},
+      {t:'וּמְקֻבָּל,',s:7.9},{t:'וְטוֹב,',s:8.5},{t:'וְיָפֶה',s:9.1},
+      {t:'הַדָּבָר',s:9.7},{t:'הַזֶּה',s:10.1},{t:'עָלֵינוּ',s:10.6},{t:'לְעוֹלָם',s:11.1},{t:'וָעֶד.',s:11.7},
+    ]},
+    { label:'', words:[
+      {t:'אֱמֶת,',s:13.2},{t:'אֱלֹקֵי',s:13.8},{t:'עוֹלָם',s:14.3},{t:'מַלְכֵּנוּ,',s:14.8},
+      {t:'צוּר',s:15.9},{t:'יַעֲקֹב,',s:16.3},
+      {t:'מָגֵן',s:17.2},{t:'יִשְׁעֵנוּ.',s:17.7},
+    ]},
+  ]
+},
+{
+  num:'56', he:'עֶזְרַת אֲבוֹתֵינוּ', en:'Ezras Avoseinu',
+  audio:'11002487_Tefillah_56_Ezras_Avoseinu.mp3',
+  blocks:[
+    { label:'', words:[
+      {t:'עֶזְרַת',s:0.0},{t:'אֲבוֹתֵינוּ',s:0.6},{t:'אַתָּה',s:1.4},{t:'הוּא',s:1.9},
+      {t:'מֵעוֹלָם,',s:2.3},{t:'מָגֵן',s:3.3},{t:'וּמוֹשִׁיעַ',s:3.8},
+      {t:'לִבְנֵיהֶם',s:4.5},{t:'אַחֲרֵיהֶם',s:5.2},{t:'בְּכָל-דּוֹר',s:6.1},{t:'וָדוֹר.',s:6.7},
+    ]},
+    { label:'', words:[
+      {t:'בְּרוּם',s:8.3},{t:'עוֹלָם',s:8.8},{t:'מוֹשָׁבֶךָ',s:9.3},
+      {t:'וּמִשְׁפָּטֶיךָ',s:10.1},{t:'וְצִדְקָתְךָ',s:11.0},
+      {t:'עַד',s:12.0},{t:'אַפְסֵי-אָרֶץ.',s:12.4},
+    ]},
+    { label:'', words:[
+      {t:'אַשְׁרֵי',s:14.0},{t:'אִישׁ',s:14.6},{t:'שֶׁיִּשְׁמַע',s:15.0},
+      {t:'לְמִצְוֹתֶיךָ,',s:15.7},{t:'וְתוֹרָתְךָ',s:17.0},
+      {t:'וּדְבָרְךָ',s:17.8},{t:'יָשִׂים',s:18.5},{t:'עַל-לִבּוֹ.',s:19.0},
+    ]},
+  ]
+},
+{
+  num:'57', he:'שִׁירָה חֲדָשָׁה', en:'Shirah Chadashah',
+  audio:'11002489_Tefillah_57_Shirah_Chadashah.mp3',
+  blocks:[
+    { label:'', words:[
+      {t:'שִׁירָה',s:0.0},{t:'חֲדָשָׁה',s:0.6},{t:'שִׁבְּחוּ',s:1.2},{t:'גְאוּלִים',s:1.8},
+      {t:'לְשִׁמְךָ',s:2.5},{t:'עַל',s:3.2},{t:'שְׂפַת',s:3.6},{t:'הַיָּם,',s:4.0},
+    ]},
+    { label:'', words:[
+      {t:'יַחַד',s:5.5},{t:'כֻּלָּם',s:6.0},{t:'הוֹדוּ',s:6.5},
+      {t:'וְהִמְלִיכוּ',s:7.0},{t:'וְאָמְרוּ:',s:7.8},
+    ]},
+    { label:'', words:[
+      {t:'ה׳',s:9.2},{t:'יִמְלֹךְ',s:9.6},{t:'לְעֹלָם',s:10.1},{t:'וָעֶד.',s:10.7},
+    ]},
+  ]
+},
+{
+  num:'64', he:'אֱלֹקֵינוּ — תַּחֲנוּן', en:'Elokeinu — Tachanun',
+  audio:'11002579_Tefillah_64_Elokeinu_-_Tachanun.mp3',
+  blocks:[
+    { label:'תחנון', words:[
+      {t:'אֱלֹקֵינוּ',s:0.0},{t:'וֵאלֹקֵי',s:0.7},{t:'אֲבוֹתֵינוּ,',s:1.3},
+      {t:'תָּבֹא',s:2.4},{t:'לְפָנֶיךָ',s:2.9},{t:'תְּפִלָּתֵנוּ,',s:3.6},
+      {t:'וְאַל',s:4.7},{t:'תִּתְעַלַּם',s:5.1},{t:'מִתְּחִנָּתֵנוּ,',s:5.9},
+    ]},
+    { label:'', words:[
+      {t:'שֶׁאֵין',s:7.5},{t:'אֲנַחְנוּ',s:8.0},{t:'עַזֵּי',s:8.5},{t:'פָנִים',s:8.9},
+      {t:'וּקְשֵׁי',s:9.4},{t:'עֹרֶף',s:9.9},
+      {t:'לוֹמַר',s:10.7},{t:'לְפָנֶיךָ',s:11.2},
+      {t:'ה׳',s:12.0},{t:'אֱלֹקֵינוּ',s:12.3},{t:'וֵאלֹקֵי',s:12.9},
+      {t:'אֲבוֹתֵינוּ,',s:13.4},{t:'צַדִּיקִים',s:14.5},{t:'אֲנַחְנוּ',s:15.1},{t:'וְלֹא',s:15.6},{t:'חָטָאנוּ,',s:16.0},
+    ]},
+    { label:'', words:[
+      {t:'אֲבָל',s:17.8},{t:'אֲנַחְנוּ',s:18.3},{t:'חָטָאנוּ.',s:18.8},
+    ]},
+  ]
+},
+{
+  num:'65', he:'וְהוּא רַחוּם', en:'VeHu Rachum',
+  audio:'11002581_Tefillah_65_VeHu_Rachum.mp3',
+  blocks:[
+    { label:'תהלים ע״ח', words:[
+      {t:'וְהוּא',s:0.0},{t:'רַחוּם,',s:0.5},{t:'יְכַפֵּר',s:1.1},{t:'עָוֹן',s:1.7},
+      {t:'וְלֹא-יַשְׁחִית,',s:2.2},{t:'וְהִרְבָּה',s:3.4},{t:'לְהָשִׁיב',s:4.0},
+      {t:'אַפּוֹ,',s:4.6},{t:'וְלֹא-יָעִיר',s:5.3},{t:'כָּל-חֲמָתוֹ.',s:6.1},
+    ]},
+    { label:'', words:[
+      {t:'ה׳',s:8.0},{t:'הוֹשִׁיעָה,',s:8.4},
+      {t:'הַמֶּלֶךְ',s:9.4},{t:'יַעֲנֵנוּ',s:9.9},{t:'בְיוֹם-קָרְאֵנוּ.',s:10.5},
+    ]},
+  ]
+},
+{
+  num:'67', he:'אֵ-ל אֶרֶךְ אַפַּיִם', en:'Kel Erech Apayim',
+  audio:'11002586_Tefillah_67_Kel_Erech_Apayim.mp3',
+  blocks:[
+    { label:'תחנון', words:[
+      {t:'אֵ-ל',s:0.0},{t:'אֶרֶךְ',s:0.5},{t:'אַפַּיִם',s:0.9},{t:'אַתָּה,',s:1.4},
+      {t:'וּבַעַל',s:2.3},{t:'הָרַחֲמִים',s:2.8},{t:'נִקְרֵאתָ,',s:3.5},
+      {t:'וְדֶרֶךְ',s:4.5},{t:'תְּשׁוּבָה',s:5.0},{t:'הוֹרֵיתָ.',s:5.6},
+    ]},
+    { label:'', words:[
+      {t:'גְּדֻלַּת',s:7.2},{t:'רַחֲמֶיךָ',s:7.8},{t:'וַחֲסָדֶיךָ',s:8.5},
+      {t:'זְכֹר',s:9.4},{t:'הַיּוֹם',s:9.9},{t:'וּבְכָל-יוֹם',s:10.4},
+      {t:'לְזֶרַע',s:11.3},{t:'יְדִידֶיךָ.',s:11.9},
+    ]},
+  ]
+},
+{
+  num:'68', he:'אַשְׁרֵי', en:'Ashrei',
+  audio:'11002589_Tefillah_68_Ashrei.mp3',
+  blocks:[
+    { label:'תהלים פ״ד, קמ״ד, קמ״ה', words:[
+      {t:'אַשְׁרֵי',s:0.0},{t:'יוֹשְׁבֵי',s:0.7},{t:'בֵיתֶךָ,',s:1.3},
+      {t:'עוֹד',s:2.2},{t:'יְהַלְלוּךָ',s:2.7},{t:'סֶּלָה.',s:3.4},
+    ]},
+    { label:'', words:[
+      {t:'אַשְׁרֵי',s:5.2},{t:'הָעָם',s:5.8},{t:'שֶׁכָּכָה',s:6.3},{t:'לּוֹ,',s:6.9},
+      {t:'אַשְׁרֵי',s:7.8},{t:'הָעָם',s:8.3},{t:'שֶׁה׳',s:8.8},{t:'אֱלֹקָיו.',s:9.3},
+    ]},
+    { label:'תהלה לדוד', words:[
+      {t:'תְּהִלָּה',s:11.2},{t:'לְדָוִד:',s:11.8},
+      {t:'אֲרוֹמִמְךָ',s:13.2},{t:'אֱלוֹהַי',s:14.0},{t:'הַמֶּלֶךְ,',s:14.6},
+      {t:'וַאֲבָרְכָה',s:15.5},{t:'שִׁמְךָ',s:16.2},{t:'לְעוֹלָם',s:16.8},{t:'וָעֶד.',s:17.4},
+    ]},
+    { label:'', words:[
+      {t:'בְּכָל-יוֹם',s:19.0},{t:'אֲבָרֲכֶךָ,',s:19.7},
+      {t:'וַאֲהַלְלָה',s:20.7},{t:'שִׁמְךָ',s:21.3},{t:'לְעוֹלָם',s:21.8},{t:'וָעֶד.',s:22.4},
+    ]},
+    { label:'', words:[
+      {t:'גָּדוֹל',s:24.0},{t:'ה׳',s:24.5},{t:'וּמְהֻלָּל',s:24.9},{t:'מְאֹד,',s:25.4},
+      {t:'וְלִגְדֻלָּתוֹ',s:26.3},{t:'אֵין',s:27.2},{t:'חֵקֶר.',s:27.6},
+    ]},
+    { label:'', words:[
+      {t:'פּוֹתֵחַ',s:29.5},{t:'אֶת-יָדֶךָ,',s:30.0},
+      {t:'וּמַשְׂבִּיעַ',s:31.0},{t:'לְכָל-חַי',s:31.6},{t:'רָצוֹן.',s:32.3},
+    ]},
+    { label:'', words:[
+      {t:'תְּהִלַּת',s:34.0},{t:'ה׳',s:34.6},{t:'יְדַבֶּר-פִּי,',s:35.0},
+      {t:'וִיבָרֵךְ',s:36.0},{t:'כָּל-בָּשָׂר',s:36.5},{t:'שֵׁם',s:37.2},
+      {t:'קָדְשׁוֹ',s:37.6},{t:'לְעוֹלָם',s:38.1},{t:'וָעֶד.',s:38.7},
+      {t:'וַאֲנַחְנוּ',s:39.7},{t:'נְבָרֵךְ',s:40.3},{t:'יָהּ',s:40.8},
+      {t:'מֵעַתָּה',s:41.2},{t:'וְעַד-עוֹלָם',s:41.7},{t:'הַלְלוּיָהּ.',s:42.5},
+    ]},
+  ]
+},
+
+,{
+  num:'70', he:'וּבָא לְצִיּוֹן', en:'Uvuh Letziyon',
+  audio:'11002594_Tefillah_70_Uvuh_Letziyon.mp3',
+  blocks:[
+    { label:'ובא לציון', words:[
+      {t:'וּבָא',s:0.0},{t:'לְצִיּוֹן',s:0.5},{t:'גּוֹאֵל,',s:1.1},
+      {t:'וּלְשָׁבֵי',s:2.0},{t:'פֶשַׁע',s:2.6},{t:'בְּיַעֲקֹב,',s:3.1},
+      {t:'נְאֻם',s:4.1},{t:'ה׳.',s:4.6},
+    ]},
+    { label:'', words:[
+      {t:'וַאֲנִי,',s:6.0},{t:'זֹאת',s:6.6},{t:'בְּרִיתִי',s:7.0},{t:'אוֹתָם,',s:7.5},
+      {t:'אָמַר',s:8.5},{t:'ה׳:',s:8.9},
+      {t:'רוּחִי',s:9.6},{t:'אֲשֶׁר',s:10.0},{t:'עָלֶיךָ,',s:10.5},
+      {t:'וּדְבָרַי',s:11.5},{t:'אֲשֶׁר-שַׂמְתִּי',s:12.0},{t:'בְּפִיךָ,',s:12.9},
+      {t:'לֹא-יָמוּשׁוּ',s:13.9},{t:'מִפִּיךָ',s:14.7},
+      {t:'וּמִפִּי',s:15.5},{t:'זַרְעֲךָ',s:16.0},{t:'וּמִפִּי',s:16.6},
+      {t:'זֶרַע',s:17.2},{t:'זַרְעֲךָ,',s:17.6},
+      {t:'אָמַר',s:18.6},{t:'ה׳,',s:19.0},
+      {t:'מֵעַתָּה',s:19.7},{t:'וְעַד-עוֹלָם.',s:20.2},
+    ]},
+    { label:'קדושה דסידרא', words:[
+      {t:'וְאַתָּה',s:22.5},{t:'קָדוֹשׁ,',s:23.0},
+      {t:'יוֹשֵׁב',s:23.8},{t:'תְּהִלּוֹת',s:24.2},{t:'יִשְׂרָאֵל.',s:24.8},
+    ]},
+    { label:'', words:[
+      {t:'וְקָרָא',s:26.5},{t:'זֶה',s:27.1},{t:'אֶל-זֶה',s:27.5},{t:'וְאָמַר:',s:28.0},
+      {t:'קָדוֹשׁ',s:29.0},{t:'קָדוֹשׁ',s:29.7},{t:'קָדוֹשׁ',s:30.4},
+      {t:'ה׳',s:31.1},{t:'צְבָאוֹת,',s:31.5},
+      {t:'מְלֹא',s:32.5},{t:'כָל-הָאָרֶץ',s:32.9},{t:'כְּבוֹדוֹ.',s:33.5},
+    ]},
+  ]
+},
+{
+  num:'71', he:'תְּפִלָּה לְדָוִד', en:'Tefillah LeDovid',
+  audio:'11002601_Tefillah_71_Tefillah_LeDovid.mp3',
+  blocks:[
+    { label:'תהלים פ״ו', words:[
+      {t:'תְּפִלָּה',s:0.0},{t:'לְדָוִד,',s:0.6},
+      {t:'הַטֵּה-ה׳',s:1.5},{t:'אָזְנְךָ',s:2.2},{t:'עֲנֵנִי,',s:2.8},
+      {t:'כִּי-עָנִי',s:3.8},{t:'וְאֶבְיוֹן',s:4.4},{t:'אָנִי.',s:5.0},
+    ]},
+    { label:'', words:[
+      {t:'שְׁמֹר',s:6.5},{t:'נַפְשִׁי',s:7.0},{t:'כִּי-חָסִיד',s:7.5},{t:'אָנִי,',s:8.2},
+      {t:'הוֹשַׁע',s:9.0},{t:'עַבְדְּךָ',s:9.5},{t:'אַתָּה',s:10.0},
+      {t:'אֱלֹקַי,',s:10.5},{t:'הַבּוֹטֵחַ',s:11.4},{t:'אֵלֶיךָ.',s:12.0},
+    ]},
+    { label:'', words:[
+      {t:'כִּי-אַתָּה',s:13.5},{t:'אֲדֹנָי',s:14.2},{t:'טוֹב',s:14.8},
+      {t:'וְסַלָּח,',s:15.3},{t:'וְרַב-חֶסֶד',s:16.2},{t:'לְכָל-קֹרְאֶיךָ.',s:17.0},
+    ]},
+  ]
+},
+{
+  num:'73a', he:'שִׁיר שֶׁל יוֹם — ראשון', en:'Shir Shel Yom — Sunday',
+  audio:'11002605_Tefillah_73_Sunday_Shir_Shel_Hom.mp3',
+  blocks:[
+    { label:'תהלים כ״ד — יום ראשון', words:[
+      {t:'לְדָוִד',s:0.0},{t:'מִזְמוֹר,',s:0.5},
+      {t:'לַה׳',s:1.3},{t:'הָאָרֶץ',s:1.8},{t:'וּמְלוֹאָהּ,',s:2.3},
+      {t:'תֵּבֵל',s:3.3},{t:'וְיֹשְׁבֵי',s:3.7},{t:'בָהּ.',s:4.2},
+    ]},
+    { label:'', words:[
+      {t:'כִּי-הוּא',s:5.8},{t:'עַל-יַמִּים',s:6.3},{t:'יְסָדָהּ,',s:6.9},
+      {t:'וְעַל-נְהָרוֹת',s:7.9},{t:'יְכוֹנְנֶהָ.',s:8.7},
+    ]},
+    { label:'', words:[
+      {t:'מִי-יַעֲלֶה',s:10.3},{t:'בְהַר-ה׳,',s:11.0},
+      {t:'וּמִי-יָקוּם',s:12.0},{t:'בִּמְקוֹם',s:12.7},{t:'קָדְשׁוֹ.',s:13.2},
+    ]},
+    { label:'', words:[
+      {t:'נְקִי',s:14.8},{t:'כַפַּיִם',s:15.2},{t:'וּבַר-לֵבָב,',s:15.7},
+      {t:'אֲשֶׁר',s:16.7},{t:'לֹא-נָשָׂא',s:17.1},{t:'לַשָּׁוְא',s:17.7},{t:'נַפְשִׁי,',s:18.2},
+      {t:'וְלֹא',s:19.1},{t:'נִשְׁבַּע',s:19.5},{t:'לְמִרְמָה.',s:19.9},
+    ]},
+  ]
+},
+{
+  num:'73b', he:'שִׁיר שֶׁל יוֹם — שני', en:'Shir Shel Yom — Monday',
+  audio:'11002607_Tefillah_73_Monday_Shir_Shel_Yom.mp3',
+  blocks:[
+    { label:'תהלים מ״ח — יום שני', words:[
+      {t:'שִׁיר',s:0.0},{t:'מִזְמוֹר',s:0.5},{t:'לִבְנֵי-קֹרַח.',s:0.9},
+      {t:'גָּדוֹל',s:1.9},{t:'ה׳',s:2.4},{t:'וּמְהֻלָּל',s:2.8},{t:'מְאֹד,',s:3.3},
+      {t:'בְּעִיר',s:4.2},{t:'אֱלֹקֵינוּ',s:4.6},{t:'הַר-קָדְשׁוֹ.',s:5.1},
+    ]},
+    { label:'', words:[
+      {t:'יְפֵה',s:6.7},{t:'נוֹף',s:7.1},{t:'מְשׂוֹשׂ',s:7.5},{t:'כָּל-הָאָרֶץ,',s:7.9},
+      {t:'הַר-צִיּוֹן',s:8.9},{t:'יַרְכְּתֵי',s:9.4},{t:'צָפוֹן,',s:9.9},
+      {t:'קִרְיַת',s:10.8},{t:'מֶלֶךְ',s:11.2},{t:'רָב.',s:11.6},
+    ]},
+  ]
+},
+{
+  num:'73d', he:'שִׁיר שֶׁל יוֹם — רביעי', en:'Shir Shel Yom — Wednesday',
+  audio:'11002611_Tefillah_73_Wednesday_Shir_Shel_Yom.mp3',
+  blocks:[
+    { label:'תהלים צ״ד — יום רביעי', words:[
+      {t:'אֵל-נְקָמוֹת',s:0.0},{t:'ה׳,',s:0.7},
+      {t:'אֵל',s:1.4},{t:'נְקָמוֹת',s:1.8},{t:'הוֹפִיעַ.',s:2.3},
+    ]},
+    { label:'', words:[
+      {t:'הִנָּשֵׂא',s:3.8},{t:'שֹׁפֵט',s:4.3},{t:'הָאָרֶץ,',s:4.8},
+      {t:'הָשֵׁב',s:5.8},{t:'גְּמוּל',s:6.2},{t:'עַל-גֵּאִים.',s:6.7},
+    ]},
+    { label:'', words:[
+      {t:'עַד-מָתַי',s:8.3},{t:'רְשָׁעִים,',s:8.9},{t:'ה׳,',s:9.6},
+      {t:'עַד-מָתַי',s:10.4},{t:'רְשָׁעִים',s:11.0},{t:'יַעֲלֹזוּ.',s:11.6},
+    ]},
+    { label:'', words:[
+      {t:'כִּי',s:13.2},{t:'לֹא-יִטֹּשׁ',s:13.6},{t:'ה׳',s:14.3},{t:'עַמּוֹ,',s:14.7},
+      {t:'וְנַחֲלָתוֹ',s:15.6},{t:'לֹא',s:16.3},{t:'יַעֲזֹב.',s:16.7},
+    ]},
+  ]
+},
+{
+  num:'73e', he:'שִׁיר שֶׁל יוֹם — חמישי', en:'Shir Shel Yom — Thursday',
+  audio:'11002613_Tefillah_73_Thursday_Shir_Shel_Yom.mp3',
+  blocks:[
+    { label:'תהלים פ״א — יום חמישי', words:[
+      {t:'לַמְנַצֵּחַ',s:0.0},{t:'עַל-הַגִּתִּית,',s:0.6},{t:'לְאָסָף.',s:1.4},
+      {t:'הַרְנִינוּ',s:2.3},{t:'לֵאלֹקִים',s:2.8},{t:'עוּזֵּנוּ,',s:3.4},
+      {t:'הָרִיעוּ',s:4.4},{t:'לֵאלֹקֵי',s:4.9},{t:'יַעֲקֹב.',s:5.5},
+    ]},
+    { label:'', words:[
+      {t:'שְׂאוּ-זִמְרָה',s:7.0},{t:'וּתְנוּ-תֹף,',s:7.7},
+      {t:'כִּנּוֹר',s:8.7},{t:'נָעִים',s:9.1},{t:'עִם-נָבֶל.',s:9.6},
+    ]},
+    { label:'', words:[
+      {t:'אָנֹכִי',s:11.2},{t:'ה׳',s:11.7},{t:'אֱלֹקֶיךָ,',s:12.1},
+      {t:'הַמַּעַלְךָ',s:13.0},{t:'מֵאֶרֶץ',s:13.7},{t:'מִצְרָיִם,',s:14.2},
+      {t:'הַרְחֶב-פִּיךָ',s:15.2},{t:'וַאֲמַלְאֵהוּ.',s:16.0},
+    ]},
+  ]
+},
+{
+  num:'74', he:'הוֹשִׁיעֵנוּ', en:'Hoshieinu (post-Shir)',
+  audio:'11002617_Tefillah_74_Hoshieinu.mp3',
+  blocks:[
+    { label:'', words:[
+      {t:'הוֹשִׁיעֵנוּ',s:0.0},{t:'ה׳',s:0.8},{t:'אֱלֹקֵינוּ,',s:1.2},
+      {t:'וְקַבְּצֵנוּ',s:2.2},{t:'מִן-הַגּוֹיִם,',s:2.9},
+      {t:'לְהֹדוֹת',s:4.0},{t:'לְשֵׁם',s:4.6},{t:'קָדְשֶׁךָ,',s:5.0},
+      {t:'לְהִשְׁתַּבֵּחַ',s:6.0},{t:'בִּתְהִלָּתֶךָ.',s:6.7},
+    ]},
+    { label:'', words:[
+      {t:'בָּרוּךְ',s:8.5},{t:'ה׳',s:9.0},{t:'אֱלֹקֵי',s:9.4},{t:'יִשְׂרָאֵל',s:9.8},
+      {t:'מִן-הָעוֹלָם',s:10.5},{t:'וְעַד',s:11.4},{t:'הָעוֹלָם,',s:11.8},
+      {t:'וְאָמַר',s:12.8},{t:'כָּל-הָעָם',s:13.2},{t:'אָמֵן',s:13.8},{t:'הַלְלוּיָהּ.',s:14.3},
+    ]},
+  ]
+},
+{
+  num:'75', he:'קַוֵּה', en:'Kavei',
+  audio:'11002619_Tefillah_75_Kavei.mp3',
+  blocks:[
+    { label:'', words:[
+      {t:'קַוֵּה',s:0.0},{t:'אֶל-ה׳,',s:0.6},
+      {t:'חֲזַק',s:1.5},{t:'וְיַאֲמֵץ',s:2.0},{t:'לִבֶּךָ,',s:2.6},
+      {t:'וְקַוֵּה',s:3.5},{t:'אֶל-ה׳.',s:4.0},
+    ]},
+    { label:'', words:[
+      {t:'אֵין',s:5.8},{t:'קָדוֹשׁ',s:6.2},{t:'כַּה׳,',s:6.7},
+      {t:'כִּי',s:7.6},{t:'אֵין',s:7.9},{t:'בִּלְתֶּךָ,',s:8.3},
+      {t:'וְאֵין',s:9.2},{t:'צוּר',s:9.6},{t:'כֵּאלֹקֵינוּ.',s:10.0},
+    ]},
+    { label:'', words:[
+      {t:'כִּי',s:11.8},{t:'מִי',s:12.1},{t:'אֵל',s:12.5},
+      {t:'מִבַּלְעֲדֵי',s:12.9},{t:'ה׳,',s:13.5},
+      {t:'וּמִי',s:14.4},{t:'צוּר',s:14.8},{t:'זוּלָתִי',s:15.2},{t:'אֱלֹקֵינוּ.',s:15.7},
+    ]},
+  ]
+},
+];
+
+// ── Prayers that don't have audio yet (remaining 23) ──
+const COMING_SOON = [
+  { num:'26',  he:'הוֹשִׁיעֵנוּ',                     en:'Hoshieinu' },
+  { num:'38',  he:'בָּרוּךְ ה׳ לְעוֹלָם',             en:'Baruch Hashem LeOlam' },
+  { num:'43',  he:'יִשְׁתַּבַּח',                     en:'Yishtabach' },
+  { num:'46',  he:'תִּתְבָּרֵךְ',                     en:'Tisbareich' },
+  { num:'49',  he:'לָאֵ-ל בָּרוּךְ',                  en:'LaKeil Baruch' },
+  { num:'52',  he:'וְהָיָה',                          en:'VeHayah' },
+  { num:'55',  he:'אֶל הָרִאשׁוֹנִים',               en:'Al HaRishonim' },
+  { num:'58',  he:'שְׁמוֹנֶה עֶשְׂרֵה',              en:'Shmoneh Esrei' },
+  { num:'66',  he:'אָבִינוּ מַלְכֵּנוּ',              en:'Avinu Malkeinu' },
+  { num:'69',  he:'לַמְנַצֵּחַ יַעַנְךָ',            en:'Lamnatzeach Yaancha' },
+  { num:'72',  he:'בֵּית יַעֲקֹב',                   en:'Bais Yaakov' },
+  { num:'73c', he:'שִׁיר שֶׁל יוֹם — שלישי',         en:'Shir Shel Yom — Tuesday' },
+  { num:'73f', he:'שִׁיר שֶׁל יוֹם — שישי',          en:'Shir Shel Yom — Friday' },
+  { num:'76',  he:'עָלֵינוּ',                         en:'Aleinu' },
+  { num:'77',  he:'שֵׁשׁ זְכִירוֹת',                 en:'Sheis Zechiros' },
+];
+
+// ── Audio path — for Vercel put MP3s in public/audio/ ──
+const AUDIO_BASE = 'audio/';
+
+// ── State ──
+const aud = document.getElementById('aud');
+let cur = -1, wIdx = -1, playing = false, spd = 1, raf = null;
+let allW = [];
+
+// ── Build Sidebar ──
+function buildMenu() {
+  const m = document.getElementById('menu');
+  m.innerHTML = '';
+
+  // Available prayers
+  PRAYERS.forEach((p, i) => {
+    const el = document.createElement('div');
+    el.className = 'mi' + (i === cur ? ' active' : '');
+    el.innerHTML = `<div class="mi-num">${p.num}</div><div class="mi-texts"><div class="mi-he">${p.he}</div><div class="mi-en">${p.en}</div></div>`;
+    el.onclick = () => load(i);
+    m.appendChild(el);
+    if (i === cur) setTimeout(() => el.scrollIntoView({ block: 'nearest' }), 0);
+  });
+
+  // Coming soon
+  if (COMING_SOON.length) {
+    const lbl = document.createElement('div');
+    lbl.className = 'sb-hd';
+    lbl.style.marginTop = '12px';
+    lbl.textContent = 'Coming Soon';
+    m.appendChild(lbl);
+    COMING_SOON.forEach(p => {
+      const el = document.createElement('div');
+      el.className = 'mi soon';
+      el.innerHTML = `<div class="mi-num">${p.num}</div><div class="mi-texts"><div class="mi-he">${p.he}</div><div class="mi-en">${p.en}</div></div>`;
+      m.appendChild(el);
+    });
+  }
+}
+
+// ── Load prayer ──
+function load(idx) {
+  stop();
+  cur = idx; wIdx = -1; allW = [];
+  const p = PRAYERS[idx];
+
+  document.getElementById('ttl').textContent = p.he;
+  document.getElementById('tsub').textContent = `תְּפִלָּה ${p.num} · ${p.en}`;
+  document.getElementById('tnm').textContent = p.he;
+  document.getElementById('b-prev').disabled = idx === 0;
+  document.getElementById('b-next').disabled = idx === PRAYERS.length - 1;
+  ['play-btn','b-rew','b-fwd'].forEach(id => document.getElementById(id).disabled = false);
+
+  buildText(p);
+  buildMenu();
+
+  aud.src = AUDIO_BASE + p.audio;
+  aud.playbackRate = spd;
+  aud.load();
+  updProg();
+}
+
+// ── Build Hebrew text with clickable words ──
+function buildText(p) {
+  const welcome = document.getElementById('welcome');
+  const display = document.getElementById('pdisplay');
+  welcome.style.display = 'none';
+  display.style.display = 'block';
+  display.innerHTML = '';
+  allW = [];
+
+  p.blocks.forEach(block => {
+    const bd = document.createElement('div');
+    bd.className = 'block';
+    if (block.label) {
+      const lb = document.createElement('div');
+      lb.className = 'block-label';
+      lb.textContent = block.label;
+      bd.appendChild(lb);
+    }
+    const tx = document.createElement('div');
+    tx.className = 'prayer-text';
+    block.words.forEach(w => {
+      const sp = document.createElement('span');
+      sp.className = 'w';
+      sp.textContent = w.t + ' ';
+      const i = allW.length;
+      sp.onclick = () => seekToWord(i);
+      tx.appendChild(sp);
+      allW.push({ el: sp, s: w.s });
+    });
+    bd.appendChild(tx);
+    display.appendChild(bd);
+  });
+}
+
+// ── Seek to word on click ──
+function seekToWord(i) {
+  aud.currentTime = allW[i].s;
+  hlWord(i);
+  if (!playing) play();
+}
+
+// ── Highlight word ──
+function hlWord(i) {
+  if (wIdx >= 0 && allW[wIdx]) {
+    allW[wIdx].el.classList.remove('now');
+    allW[wIdx].el.classList.add('done');
+  }
+  wIdx = i;
+  if (i >= 0 && allW[i]) {
+    allW[i].el.classList.add('now');
+    allW[i].el.classList.remove('done');
+    allW[i].el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+// ── Sync loop ──
+function syncLoop() {
+  if (!playing) return;
+  const t = aud.currentTime;
+  let active = -1;
+  for (let i = 0; i < allW.length; i++) {
+    if (allW[i].s <= t) active = i; else break;
+  }
+  if (active !== wIdx) hlWord(active);
+  updProg();
+  raf = requestAnimationFrame(syncLoop);
+}
+
+// ── Play / Stop ──
+function play() {
+  aud.playbackRate = spd;
+  aud.play().catch(() => {});
+  playing = true;
+  document.getElementById('play-btn').textContent = '⏸';
+  raf = requestAnimationFrame(syncLoop);
+}
+function stop() {
+  aud.pause();
+  playing = false;
+  document.getElementById('play-btn').textContent = '▶';
+  if (raf) cancelAnimationFrame(raf);
+}
+function toggle() { playing ? stop() : play(); }
+
+// ── Progress ──
+function updProg() {
+  const dur = aud.duration || 0, t = aud.currentTime || 0;
+  const pct = dur ? (t / dur) * 100 : 0;
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-thumb').style.right = (100 - pct) + '%';
+  const fmt = s => { const m = Math.floor(s/60), sec = Math.floor(s%60); return m+':'+String(sec).padStart(2,'0'); };
+  document.getElementById('td').textContent = fmt(t) + ' / ' + fmt(dur);
+}
+
+document.getElementById('prog-wrap').addEventListener('click', e => {
+  const r = e.currentTarget.getBoundingClientRect();
+  const pct = (e.clientX - r.left) / r.width;
+  if (aud.duration) { aud.currentTime = pct * aud.duration; updProg(); }
+});
+
+// ── Controls ──
+aud.addEventListener('ended', () => {
+  stop();
+  if (cur < PRAYERS.length - 1) setTimeout(() => load(cur + 1), 500);
+});
+aud.addEventListener('timeupdate', updProg);
+
+document.getElementById('play-btn').addEventListener('click', toggle);
+document.getElementById('b-prev').addEventListener('click', () => { if (cur > 0) load(cur - 1); });
+document.getElementById('b-next').addEventListener('click', () => { if (cur < PRAYERS.length - 1) load(cur + 1); });
+document.getElementById('b-rew').addEventListener('click', () => { aud.currentTime = Math.max(0, aud.currentTime - 5); updProg(); });
+document.getElementById('b-fwd').addEventListener('click', () => { aud.currentTime = Math.min(aud.duration||0, aud.currentTime + 5); updProg(); });
+
+// Speed
+document.querySelectorAll('.sp-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    spd = parseFloat(b.dataset.s);
+    aud.playbackRate = spd;
+    document.querySelectorAll('.sp-btn').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+  });
+});
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (e.key === ' ') { e.preventDefault(); if (cur >= 0) toggle(); }
+  if (e.key === 'ArrowRight') { aud.currentTime = Math.min(aud.duration||0, aud.currentTime+5); updProg(); }
+  if (e.key === 'ArrowLeft')  { aud.currentTime = Math.max(0, aud.currentTime-5); updProg(); }
+  if (e.key === 'ArrowUp')    { e.preventDefault(); if (cur > 0) load(cur-1); }
+  if (e.key === 'ArrowDown')  { e.preventDefault(); if (cur < PRAYERS.length-1) load(cur+1); }
+});
+
+buildMenu();
+</script>
+</body>
+</html>
